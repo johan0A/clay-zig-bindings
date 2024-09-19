@@ -1,0 +1,15 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "zig-debug-build",
+            "type": "shell",
+            "command": "zig build"
+        },
+        {
+            "label": "zig-debug-test-build",
+            "type": "shell",
+            "command": "zig build test"
+        }
+    ]
+}
