@@ -1,11 +1,6 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-const c = @cImport({
-    @cInclude("stdint.h");
-    @cInclude("stdbool.h");
-});
-
 pub const String = extern struct {
     length: c_int,
     chars: [*]c_char,
@@ -325,8 +320,6 @@ test {
     Initialize(arena, .{ .width = 1000, .height = 1000 });
 
     BeginLayout();
-
-    // CLAY_RECTANGLE(CLAY_ID("OuterContainer"), CLAY_LAYOUT(.sizing = { .width = CLAY_SIZING_GROW(), .height = CLAY_SIZING_GROW() }, .padding = { 16, 16 }, .childGap = 16), CLAY_RECTANGLE_CONFIG(.color = {200, 200, 200, 255})
 
     {
         var layout_config = LayoutConfig{
