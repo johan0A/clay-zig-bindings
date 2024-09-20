@@ -5,12 +5,30 @@ pub fn build(b: *B) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    {
-        _ = b.addModule("zig-package-template", .{
-            .root_source_file = b.path("src/root.zig"),
+    const clay_lib = blk: {
+        const clay_lib = b.addStaticLibrary(.{
+            .name = "clay",
             .target = target,
             .optimize = optimize,
         });
+
+        clay_lib.addIncludePath(b.path("./c_files/include/"));
+        clay_lib.addCSourceFile(.{
+            .file = b.path("./c_files/source/clay.c"),
+        });
+
+        break :blk clay_lib;
+    };
+
+    {
+        const module = b.addModule("zig-package-template", .{
+            .root_source_file = b.path("src/root.zig"),
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+        });
+
+        module.linkLibrary(clay_lib);
     }
 
     {
@@ -18,7 +36,10 @@ pub fn build(b: *B) void {
             .root_source_file = b.path("src/root.zig"),
             .target = target,
             .optimize = optimize,
+            .link_libc = true,
         });
+
+        exe_unit_tests.linkLibrary(clay_lib);
 
         const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
         const test_step = b.step("test", "Run unit tests");
@@ -27,25 +48,15 @@ pub fn build(b: *B) void {
 
     {
         const tests_check = b.addTest(.{
-            .name = "check",
             .root_source_file = b.path("src/root.zig"),
             .target = target,
             .optimize = optimize,
+            .link_libc = true,
         });
+
+        tests_check.linkLibrary(clay_lib);
 
         const check = b.step("check", "Check if tests compile");
         check.dependOn(&tests_check.step);
     }
-}
-
-fn addDependencies(
-    compile_step: *B.Step.Compile,
-    b: *B,
-    target: B.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
-) void {
-    _ = compile_step;
-    _ = b;
-    _ = target;
-    _ = optimize;
 }
