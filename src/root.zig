@@ -255,18 +255,18 @@ const extern_elements = struct {
     extern "c" fn Clay__CloseElementWithChildren() void;
     extern "c" fn Clay__CloseScrollElement() void;
     extern "c" fn Clay__CloseFloatingElement() void;
-    extern "c" fn Clay__LayoutConfigArray_Add(array: *ClayArray(LayoutConfig), config: LayoutConfig) *LayoutConfig;
-    extern "c" fn Clay__RectangleElementConfigArray_Add(array: *ClayArray(RectangleElementConfig), config: RectangleElementConfig) *RectangleElementConfig;
-    extern "c" fn Clay__TextElementConfigArray_Add(array: *ClayArray(TextElementConfig), config: TextElementConfig) *TextElementConfig;
-    extern "c" fn Clay__ImageElementConfigArray_Add(array: *ClayArray(ImageElementConfig), config: ImageElementConfig) *ImageElementConfig;
-    extern "c" fn Clay__FloatingElementConfigArray_Add(array: *ClayArray(FloatingElementConfig), config: FloatingElementConfig) *FloatingElementConfig;
-    extern "c" fn Clay__CustomElementConfigArray_Add(array: *ClayArray(CustomElementConfig), config: CustomElementConfig) *CustomElementConfig;
-    extern "c" fn Clay__ScrollElementConfigArray_Add(array: *ClayArray(ScrollElementConfig), config: ScrollElementConfig) *ScrollElementConfig;
-    extern "c" fn Clay__BorderElementConfigArray_Add(array: *ClayArray(BorderElementConfig), config: BorderElementConfig) *BorderElementConfig;
+    extern "c" fn Clay__StoreLayoutConfig(config: LayoutConfig) *LayoutConfig;
+    extern "c" fn Clay__StoreRectangleElementConfig(config: RectangleElementConfig) *RectangleElementConfig;
+    extern "c" fn Clay__StoreTextElementConfig(config: TextElementConfig) *TextElementConfig;
+    extern "c" fn Clay__StoreImageElementConfig(config: ImageElementConfig) *ImageElementConfig;
+    extern "c" fn Clay__StoreFloatingElementConfig(config: FloatingElementConfig) *FloatingElementConfig;
+    extern "c" fn Clay__StoreCustomElementConfig(config: CustomElementConfig) *CustomElementConfig;
+    extern "c" fn Clay__StoreScrollElementConfig(config: ScrollElementConfig) *ScrollElementConfig;
+    extern "c" fn Clay__StoreBorderElementConfig(config: BorderElementConfig) *BorderElementConfig;
     extern "c" fn Clay__HashString(toHash: String, index: u32) ElementId;
 };
 
-// Foreign function
+// Public function declarations
 pub const MinMemorySize = extern_elements.Clay_MinMemorySize;
 pub const CreateArenaWithCapacityAndMemory = extern_elements.Clay_CreateArenaWithCapacityAndMemory;
 pub const SetPointerState = extern_elements.Clay_SetPointerState;
@@ -281,16 +281,7 @@ pub const SetMeasureTextFunction = extern_elements.Clay_SetMeasureTextFunction;
 pub const RenderCommandArray_Get = extern_elements.Clay_RenderCommandArray_Get;
 pub const SetDebugModeEnabled = extern_elements.Clay_SetDebugModeEnabled;
 
-// Private external variables
-extern "c" var Clay__layoutConfigs: ClayArray(LayoutConfig);
-extern "c" var Clay__rectangleElementConfigs: ClayArray(RectangleElementConfig);
-extern "c" var Clay__textElementConfigs: ClayArray(TextElementConfig);
-extern "c" var Clay__imageElementConfigs: ClayArray(ImageElementConfig);
-extern "c" var Clay__floatingElementConfigs: ClayArray(FloatingElementConfig);
-extern "c" var Clay__customElementConfigs: ClayArray(CustomElementConfig);
-extern "c" var Clay__scrollElementConfigs: ClayArray(ScrollElementConfig);
-extern "c" var Clay__borderElementConfigs: ClayArray(BorderElementConfig);
-
+// Private function declarations
 pub const OpenContainerElement = extern_elements.Clay__OpenContainerElement;
 pub const OpenRectangleElement = extern_elements.Clay__OpenRectangleElement;
 pub const OpenTextElement = extern_elements.Clay__OpenTextElement;
@@ -302,14 +293,14 @@ pub const OpenCustomElement = extern_elements.Clay__OpenCustomElement;
 pub const CloseElementWithChildren = extern_elements.Clay__CloseElementWithChildren;
 pub const CloseScrollElement = extern_elements.Clay__CloseScrollElement;
 pub const CloseFloatingElement = extern_elements.Clay__CloseFloatingElement;
-pub const LayoutConfigArray_Add = extern_elements.Clay__LayoutConfigArray_Add;
-pub const RectangleElementConfigArray_Add = extern_elements.Clay__RectangleElementConfigArray_Add;
-pub const TextElementConfigArray_Add = extern_elements.Clay__TextElementConfigArray_Add;
-pub const ImageElementConfigArray_Add = extern_elements.Clay__ImageElementConfigArray_Add;
-pub const FloatingElementConfigArray_Add = extern_elements.Clay__FloatingElementConfigArray_Add;
-pub const CustomElementConfigArray_Add = extern_elements.Clay__CustomElementConfigArray_Add;
-pub const ScrollElementConfigArray_Add = extern_elements.Clay__ScrollElementConfigArray_Add;
-pub const BorderElementConfigArray_Add = extern_elements.Clay__BorderElementConfigArray_Add;
+pub const StoreLayoutConfig = extern_elements.Clay__StoreLayoutConfig;
+pub const StoreRectangleElementConfig = extern_elements.Clay__StoreRectangleElementConfig;
+pub const StoreTextElementConfig = extern_elements.Clay__StoreTextElementConfig;
+pub const StoreImageElementConfig = extern_elements.Clay__StoreImageElementConfig;
+pub const StoreFloatingElementConfig = extern_elements.Clay__StoreFloatingElementConfig;
+pub const StoreCustomElementConfig = extern_elements.Clay__StoreCustomElementConfig;
+pub const StoreScrollElementConfig = extern_elements.Clay__StoreScrollElementConfig;
+pub const StoreBorderElementConfig = extern_elements.Clay__StoreBorderElementConfig;
 pub const HashString = extern_elements.Clay__HashString;
 
 fn measureText(str: *String, conf: *TextElementConfig) callconv(.C) Dimensions {
