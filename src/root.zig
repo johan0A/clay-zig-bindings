@@ -227,20 +227,59 @@ pub fn ClayArray(comptime T: type) type {
     };
 }
 
-// Foreign function declarations
-extern "c" fn Clay_MinMemorySize() u32;
-extern "c" fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, offset: [*]u8) Arena;
-extern "c" fn Clay_SetPointerState(position: Vector2, pointerDown: bool) void;
-extern "c" fn Clay_Initialize(arena: Arena, layoutDimensions: Dimensions) void;
-extern "c" fn Clay_UpdateScrollContainers(isPointerActive: bool, scrollDelta: Vector2, deltaTime: f32) void;
-extern "c" fn Clay_SetLayoutDimensions(dimensions: Dimensions) void;
-extern "c" fn Clay_BeginLayout() void;
-extern "c" fn Clay_EndLayout() ClayArray(RenderCommand);
-extern "c" fn Clay_PointerOver(id: ElementId) bool;
-extern "c" fn Clay_GetScrollContainerData(id: ElementId) ScrollContainerData;
-extern "c" fn Clay_SetMeasureTextFunction(measureTextFunction: *const fn (*String, *TextElementConfig) callconv(.C) Dimensions) void;
-extern "c" fn Clay_RenderCommandArray_Get(array: *ClayArray(RenderCommand), index: i32) *RenderCommand;
-extern "c" fn Clay_SetDebugModeEnabled(enabled: bool) void;
+const extern_elements = struct {
+    // Foreign function declarations
+    extern "c" fn Clay_MinMemorySize() u32;
+    extern "c" fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, offset: [*]u8) Arena;
+    extern "c" fn Clay_SetPointerState(position: Vector2, pointerDown: bool) void;
+    extern "c" fn Clay_Initialize(arena: Arena, layoutDimensions: Dimensions) void;
+    extern "c" fn Clay_UpdateScrollContainers(isPointerActive: bool, scrollDelta: Vector2, deltaTime: f32) void;
+    extern "c" fn Clay_SetLayoutDimensions(dimensions: Dimensions) void;
+    extern "c" fn Clay_BeginLayout() void;
+    extern "c" fn Clay_EndLayout() ClayArray(RenderCommand);
+    extern "c" fn Clay_PointerOver(id: ElementId) bool;
+    extern "c" fn Clay_GetScrollContainerData(id: ElementId) ScrollContainerData;
+    extern "c" fn Clay_SetMeasureTextFunction(measureTextFunction: *const fn (*String, *TextElementConfig) callconv(.C) Dimensions) void;
+    extern "c" fn Clay_RenderCommandArray_Get(array: *ClayArray(RenderCommand), index: i32) *RenderCommand;
+    extern "c" fn Clay_SetDebugModeEnabled(enabled: bool) void;
+
+    // Private external functions
+    extern "c" fn Clay__OpenContainerElement(id: ElementId, layoutConfig: *LayoutConfig) void;
+    extern "c" fn Clay__OpenRectangleElement(id: ElementId, layoutConfig: *LayoutConfig, rectangleConfig: *RectangleElementConfig) void;
+    extern "c" fn Clay__OpenTextElement(id: ElementId, text: String, textConfig: *TextElementConfig) void;
+    extern "c" fn Clay__OpenImageElement(id: ElementId, layoutConfig: *LayoutConfig, imageConfig: *ImageElementConfig) void;
+    extern "c" fn Clay__OpenScrollElement(id: ElementId, layoutConfig: *LayoutConfig, scrollConfig: *ScrollElementConfig) void;
+    extern "c" fn Clay__OpenFloatingElement(id: ElementId, layoutConfig: *LayoutConfig, floatingConfig: *FloatingElementConfig) void;
+    extern "c" fn Clay__OpenBorderElement(id: ElementId, layoutConfig: *LayoutConfig, borderConfig: *BorderElementConfig) void;
+    extern "c" fn Clay__OpenCustomElement(id: ElementId, layoutConfig: *LayoutConfig, customConfig: *CustomElementConfig) void;
+    extern "c" fn Clay__CloseElementWithChildren() void;
+    extern "c" fn Clay__CloseScrollElement() void;
+    extern "c" fn Clay__CloseFloatingElement() void;
+    extern "c" fn Clay__LayoutConfigArray_Add(array: *ClayArray(LayoutConfig), config: LayoutConfig) *LayoutConfig;
+    extern "c" fn Clay__RectangleElementConfigArray_Add(array: *ClayArray(RectangleElementConfig), config: RectangleElementConfig) *RectangleElementConfig;
+    extern "c" fn Clay__TextElementConfigArray_Add(array: *ClayArray(TextElementConfig), config: TextElementConfig) *TextElementConfig;
+    extern "c" fn Clay__ImageElementConfigArray_Add(array: *ClayArray(ImageElementConfig), config: ImageElementConfig) *ImageElementConfig;
+    extern "c" fn Clay__FloatingElementConfigArray_Add(array: *ClayArray(FloatingElementConfig), config: FloatingElementConfig) *FloatingElementConfig;
+    extern "c" fn Clay__CustomElementConfigArray_Add(array: *ClayArray(CustomElementConfig), config: CustomElementConfig) *CustomElementConfig;
+    extern "c" fn Clay__ScrollElementConfigArray_Add(array: *ClayArray(ScrollElementConfig), config: ScrollElementConfig) *ScrollElementConfig;
+    extern "c" fn Clay__BorderElementConfigArray_Add(array: *ClayArray(BorderElementConfig), config: BorderElementConfig) *BorderElementConfig;
+    extern "c" fn Clay__HashString(toHash: String, index: u32) ElementId;
+};
+
+// Foreign function
+pub const MinMemorySize = extern_elements.Clay_MinMemorySize;
+pub const CreateArenaWithCapacityAndMemory = extern_elements.Clay_CreateArenaWithCapacityAndMemory;
+pub const SetPointerState = extern_elements.Clay_SetPointerState;
+pub const Initialize = extern_elements.Clay_Initialize;
+pub const UpdateScrollContainers = extern_elements.Clay_UpdateScrollContainers;
+pub const SetLayoutDimensions = extern_elements.Clay_SetLayoutDimensions;
+pub const BeginLayout = extern_elements.Clay_BeginLayout;
+pub const EndLayout = extern_elements.Clay_EndLayout;
+pub const PointerOver = extern_elements.Clay_PointerOver;
+pub const GetScrollContainerData = extern_elements.Clay_GetScrollContainerData;
+pub const SetMeasureTextFunction = extern_elements.Clay_SetMeasureTextFunction;
+pub const RenderCommandArray_Get = extern_elements.Clay_RenderCommandArray_Get;
+pub const SetDebugModeEnabled = extern_elements.Clay_SetDebugModeEnabled;
 
 // Private external variables
 extern "c" var Clay__layoutConfigs: ClayArray(LayoutConfig);
@@ -252,27 +291,26 @@ extern "c" var Clay__customElementConfigs: ClayArray(CustomElementConfig);
 extern "c" var Clay__scrollElementConfigs: ClayArray(ScrollElementConfig);
 extern "c" var Clay__borderElementConfigs: ClayArray(BorderElementConfig);
 
-// Private external functions
-extern "c" fn Clay__OpenContainerElement(id: ElementId, layoutConfig: *LayoutConfig) void;
-extern "c" fn Clay__OpenRectangleElement(id: ElementId, layoutConfig: *LayoutConfig, rectangleConfig: *RectangleElementConfig) void;
-extern "c" fn Clay__OpenTextElement(id: ElementId, text: String, textConfig: *TextElementConfig) void;
-extern "c" fn Clay__OpenImageElement(id: ElementId, layoutConfig: *LayoutConfig, imageConfig: *ImageElementConfig) void;
-extern "c" fn Clay__OpenScrollElement(id: ElementId, layoutConfig: *LayoutConfig, scrollConfig: *ScrollElementConfig) void;
-extern "c" fn Clay__OpenFloatingElement(id: ElementId, layoutConfig: *LayoutConfig, floatingConfig: *FloatingElementConfig) void;
-extern "c" fn Clay__OpenBorderElement(id: ElementId, layoutConfig: *LayoutConfig, borderConfig: *BorderElementConfig) void;
-extern "c" fn Clay__OpenCustomElement(id: ElementId, layoutConfig: *LayoutConfig, customConfig: *CustomElementConfig) void;
-extern "c" fn Clay__CloseElementWithChildren() void;
-extern "c" fn Clay__CloseScrollElement() void;
-extern "c" fn Clay__CloseFloatingElement() void;
-extern "c" fn Clay__LayoutConfigArray_Add(array: *ClayArray(LayoutConfig), config: LayoutConfig) *LayoutConfig;
-extern "c" fn Clay__RectangleElementConfigArray_Add(array: *ClayArray(RectangleElementConfig), config: RectangleElementConfig) *RectangleElementConfig;
-extern "c" fn Clay__TextElementConfigArray_Add(array: *ClayArray(TextElementConfig), config: TextElementConfig) *TextElementConfig;
-extern "c" fn Clay__ImageElementConfigArray_Add(array: *ClayArray(ImageElementConfig), config: ImageElementConfig) *ImageElementConfig;
-extern "c" fn Clay__FloatingElementConfigArray_Add(array: *ClayArray(FloatingElementConfig), config: FloatingElementConfig) *FloatingElementConfig;
-extern "c" fn Clay__CustomElementConfigArray_Add(array: *ClayArray(CustomElementConfig), config: CustomElementConfig) *CustomElementConfig;
-extern "c" fn Clay__ScrollElementConfigArray_Add(array: *ClayArray(ScrollElementConfig), config: ScrollElementConfig) *ScrollElementConfig;
-extern "c" fn Clay__BorderElementConfigArray_Add(array: *ClayArray(BorderElementConfig), config: BorderElementConfig) *BorderElementConfig;
-extern "c" fn Clay__HashString(toHash: String, index: u32) ElementId;
+pub const OpenContainerElement = extern_elements.Clay__OpenContainerElement;
+pub const OpenRectangleElement = extern_elements.Clay__OpenRectangleElement;
+pub const OpenTextElement = extern_elements.Clay__OpenTextElement;
+pub const OpenImageElement = extern_elements.Clay__OpenImageElement;
+pub const OpenScrollElement = extern_elements.Clay__OpenScrollElement;
+pub const OpenFloatingElement = extern_elements.Clay__OpenFloatingElement;
+pub const OpenBorderElement = extern_elements.Clay__OpenBorderElement;
+pub const OpenCustomElement = extern_elements.Clay__OpenCustomElement;
+pub const CloseElementWithChildren = extern_elements.Clay__CloseElementWithChildren;
+pub const CloseScrollElement = extern_elements.Clay__CloseScrollElement;
+pub const CloseFloatingElement = extern_elements.Clay__CloseFloatingElement;
+pub const LayoutConfigArray_Add = extern_elements.Clay__LayoutConfigArray_Add;
+pub const RectangleElementConfigArray_Add = extern_elements.Clay__RectangleElementConfigArray_Add;
+pub const TextElementConfigArray_Add = extern_elements.Clay__TextElementConfigArray_Add;
+pub const ImageElementConfigArray_Add = extern_elements.Clay__ImageElementConfigArray_Add;
+pub const FloatingElementConfigArray_Add = extern_elements.Clay__FloatingElementConfigArray_Add;
+pub const CustomElementConfigArray_Add = extern_elements.Clay__CustomElementConfigArray_Add;
+pub const ScrollElementConfigArray_Add = extern_elements.Clay__ScrollElementConfigArray_Add;
+pub const BorderElementConfigArray_Add = extern_elements.Clay__BorderElementConfigArray_Add;
+pub const HashString = extern_elements.Clay__HashString;
 
 fn measureText(str: *String, conf: *TextElementConfig) callconv(.C) Dimensions {
     _ = str;
@@ -284,17 +322,17 @@ fn measureText(str: *String, conf: *TextElementConfig) callconv(.C) Dimensions {
 }
 
 test {
-    std.debug.print("{}", .{Clay_MinMemorySize()});
+    std.debug.print("{}", .{MinMemorySize()});
     const allocator = std.testing.allocator;
 
-    const minMemorySize: u32 = Clay_MinMemorySize();
+    const minMemorySize: u32 = MinMemorySize();
     const memory = try allocator.alloc(u8, minMemorySize);
     defer allocator.free(memory);
-    const arena: Arena = Clay_CreateArenaWithCapacityAndMemory(minMemorySize, @ptrCast(memory));
-    Clay_SetMeasureTextFunction(measureText);
-    Clay_Initialize(arena, .{ .width = 1000, .height = 1000 });
+    const arena: Arena = CreateArenaWithCapacityAndMemory(minMemorySize, @ptrCast(memory));
+    SetMeasureTextFunction(measureText);
+    Initialize(arena, .{ .width = 1000, .height = 1000 });
 
-    Clay_BeginLayout();
+    BeginLayout();
 
     // CLAY_RECTANGLE(CLAY_ID("OuterContainer"), CLAY_LAYOUT(.sizing = { .width = CLAY_SIZING_GROW(), .height = CLAY_SIZING_GROW() }, .padding = { 16, 16 }, .childGap = 16), CLAY_RECTANGLE_CONFIG(.color = {200, 200, 200, 255})
 
@@ -310,8 +348,8 @@ test {
             .childAlignment = .{ .x = .LEFT, .y = .TOP },
         };
 
-        Clay__OpenRectangleElement(
-            Clay__HashString(.{
+        OpenRectangleElement(
+            HashString(.{
                 .chars = @ptrCast(@constCast("string")),
                 .length = 6,
             }, 0),
@@ -321,9 +359,9 @@ test {
                 .cornerRadius = .{ .bottomLeft = 1, .topLeft = 1, .topRight = 1, .bottomRight = 1 },
             }),
         );
-        defer Clay__CloseElementWithChildren();
+        defer CloseElementWithChildren();
     }
 
-    const layout = Clay_EndLayout();
+    const layout = EndLayout();
     std.debug.print("{any}", .{layout.internalArray[0..1]});
 }
