@@ -30,15 +30,15 @@ pub const BoundingBox = extern struct {
 pub const Color = [4]f32;
 
 pub const CornerRadius = extern struct {
-    topLeft: f32,
-    topRight: f32,
-    bottomLeft: f32,
-    bottomRight: f32,
+    topLeft: f32 = 0,
+    topRight: f32 = 0,
+    bottomLeft: f32 = 0,
+    bottomRight: f32 = 0,
 };
 
 pub const BorderData = extern struct {
-    width: u32,
-    color: Color,
+    width: u32 = 0,
+    color: Color = .{ 255, 255, 255, 255 },
 };
 
 pub const ElementId = extern struct {
@@ -62,8 +62,8 @@ pub const RenderCommandType = enum(EnumBackingType) {
 };
 
 pub const RectangleElementConfig = extern struct {
-    color: Color,
-    cornerRadius: CornerRadius,
+    color: Color = .{ 255, 255, 255, 255 },
+    cornerRadius: CornerRadius = .{},
 };
 
 pub const TextWrapMode = enum(EnumBackingType) {
@@ -180,8 +180,8 @@ pub const Sizing = extern struct {
 };
 
 pub const Padding = extern struct {
-    x: u16,
-    y: u16,
+    x: u16 = 0,
+    y: u16 = 0,
 };
 
 pub const LayoutDirection = enum(EnumBackingType) {
@@ -202,16 +202,19 @@ pub const LayoutAlignmentY = enum(EnumBackingType) {
 };
 
 pub const ChildAlignment = extern struct {
-    x: LayoutAlignmentX,
-    y: LayoutAlignmentY,
+    x: LayoutAlignmentX = .CENTER,
+    y: LayoutAlignmentY = .CENTER,
 };
 
 pub const LayoutConfig = extern struct {
-    sizing: Sizing,
-    padding: Padding,
-    childGap: u16,
-    layoutDirection: LayoutDirection,
-    childAlignment: ChildAlignment,
+    sizing: Sizing = .{
+        .height = .{ .constraints = .{ .sizePercent = 100 }, .type = .GROW },
+        .width = .{ .constraints = .{ .sizePercent = 100 }, .type = .GROW },
+    },
+    padding: Padding = .{},
+    childGap: u16 = 0,
+    layoutDirection: LayoutDirection = .TOP_TO_BOTTOM,
+    childAlignment: ChildAlignment = .{},
 };
 
 pub fn ClayArray(comptime T: type) type {
@@ -263,41 +266,41 @@ const extern_elements = struct {
 };
 
 // Public function declarations
-pub const MinMemorySize = extern_elements.Clay_MinMemorySize;
-pub const CreateArenaWithCapacityAndMemory = extern_elements.Clay_CreateArenaWithCapacityAndMemory;
-pub const SetPointerState = extern_elements.Clay_SetPointerState;
-pub const Initialize = extern_elements.Clay_Initialize;
-pub const UpdateScrollContainers = extern_elements.Clay_UpdateScrollContainers;
-pub const SetLayoutDimensions = extern_elements.Clay_SetLayoutDimensions;
-pub const BeginLayout = extern_elements.Clay_BeginLayout;
-pub const EndLayout = extern_elements.Clay_EndLayout;
-pub const PointerOver = extern_elements.Clay_PointerOver;
-pub const GetScrollContainerData = extern_elements.Clay_GetScrollContainerData;
-pub const SetMeasureTextFunction = extern_elements.Clay_SetMeasureTextFunction;
-pub const RenderCommandArray_Get = extern_elements.Clay_RenderCommandArray_Get;
-pub const SetDebugModeEnabled = extern_elements.Clay_SetDebugModeEnabled;
+pub const minMemorySize = extern_elements.Clay_MinMemorySize;
+pub const createArenaWithCapacityAndMemory = extern_elements.Clay_CreateArenaWithCapacityAndMemory;
+pub const setPointerState = extern_elements.Clay_SetPointerState;
+pub const initialize = extern_elements.Clay_Initialize;
+pub const updateScrollContainers = extern_elements.Clay_UpdateScrollContainers;
+pub const setLayoutDimensions = extern_elements.Clay_SetLayoutDimensions;
+pub const beginLayout = extern_elements.Clay_BeginLayout;
+pub const endLayout = extern_elements.Clay_EndLayout;
+pub const pointerOver = extern_elements.Clay_PointerOver;
+pub const getScrollContainerData = extern_elements.Clay_GetScrollContainerData;
+pub const setMeasureTextFunction = extern_elements.Clay_SetMeasureTextFunction;
+pub const renderCommandArray_Get = extern_elements.Clay_RenderCommandArray_Get;
+pub const setDebugModeEnabled = extern_elements.Clay_SetDebugModeEnabled;
 
 // Private function declarations
-pub const OpenContainerElement = extern_elements.Clay__OpenContainerElement;
-pub const OpenRectangleElement = extern_elements.Clay__OpenRectangleElement;
-pub const OpenTextElement = extern_elements.Clay__OpenTextElement;
-pub const OpenImageElement = extern_elements.Clay__OpenImageElement;
-pub const OpenScrollElement = extern_elements.Clay__OpenScrollElement;
-pub const OpenFloatingElement = extern_elements.Clay__OpenFloatingElement;
-pub const OpenBorderElement = extern_elements.Clay__OpenBorderElement;
-pub const OpenCustomElement = extern_elements.Clay__OpenCustomElement;
-pub const CloseElementWithChildren = extern_elements.Clay__CloseElementWithChildren;
-pub const CloseScrollElement = extern_elements.Clay__CloseScrollElement;
-pub const CloseFloatingElement = extern_elements.Clay__CloseFloatingElement;
-pub const StoreLayoutConfig = extern_elements.Clay__StoreLayoutConfig;
-pub const StoreRectangleElementConfig = extern_elements.Clay__StoreRectangleElementConfig;
-pub const StoreTextElementConfig = extern_elements.Clay__StoreTextElementConfig;
-pub const StoreImageElementConfig = extern_elements.Clay__StoreImageElementConfig;
-pub const StoreFloatingElementConfig = extern_elements.Clay__StoreFloatingElementConfig;
-pub const StoreCustomElementConfig = extern_elements.Clay__StoreCustomElementConfig;
-pub const StoreScrollElementConfig = extern_elements.Clay__StoreScrollElementConfig;
-pub const StoreBorderElementConfig = extern_elements.Clay__StoreBorderElementConfig;
-pub const HashString = extern_elements.Clay__HashString;
+pub const rontainer = extern_elements.Clay__OpenContainerElement;
+pub const rectangle = extern_elements.Clay__OpenRectangleElement;
+pub const text = extern_elements.Clay__OpenTextElement;
+pub const image = extern_elements.Clay__OpenImageElement;
+pub const scroll = extern_elements.Clay__OpenScrollElement;
+pub const floating = extern_elements.Clay__OpenFloatingElement;
+pub const border = extern_elements.Clay__OpenBorderElement;
+pub const sustomElement = extern_elements.Clay__OpenCustomElement;
+pub const closeParent = extern_elements.Clay__CloseElementWithChildren;
+pub const closeScroll = extern_elements.Clay__CloseScrollElement;
+pub const sloseFloating = extern_elements.Clay__CloseFloatingElement;
+pub const layout = extern_elements.Clay__StoreLayoutConfig;
+pub const rectangleConfig = extern_elements.Clay__StoreRectangleElementConfig;
+pub const textConfig = extern_elements.Clay__StoreTextElementConfig;
+pub const imageConfig = extern_elements.Clay__StoreImageElementConfig;
+pub const floatingConfig = extern_elements.Clay__StoreFloatingElementConfig;
+pub const customConfig = extern_elements.Clay__StoreCustomElementConfig;
+pub const scrollConfig = extern_elements.Clay__StoreScrollElementConfig;
+pub const borderConfig = extern_elements.Clay__StoreBorderElementConfig;
+pub const hashString = extern_elements.Clay__HashString;
 
 fn measureText(str: *String, conf: *TextElementConfig) callconv(.C) Dimensions {
     _ = str;
@@ -309,44 +312,33 @@ fn measureText(str: *String, conf: *TextElementConfig) callconv(.C) Dimensions {
 }
 
 test {
-    std.debug.print("{}", .{MinMemorySize()});
     const allocator = std.testing.allocator;
 
-    const minMemorySize: u32 = MinMemorySize();
-    const memory = try allocator.alloc(u8, minMemorySize);
+    const min_memory_size: u32 = minMemorySize();
+    const memory = try allocator.alloc(u8, min_memory_size);
     defer allocator.free(memory);
-    const arena: Arena = CreateArenaWithCapacityAndMemory(minMemorySize, @ptrCast(memory));
-    SetMeasureTextFunction(measureText);
-    Initialize(arena, .{ .width = 1000, .height = 1000 });
+    const arena: Arena = createArenaWithCapacityAndMemory(min_memory_size, @ptrCast(memory));
+    setMeasureTextFunction(measureText);
+    initialize(arena, .{ .width = 1000, .height = 1000 });
 
-    BeginLayout();
+    beginLayout();
 
     {
-        var layout_config = LayoutConfig{
-            .sizing = .{
-                .height = .{ .constraints = .{ .sizePercent = 10 }, .type = .GROW },
-                .width = .{ .constraints = .{ .sizePercent = 10 }, .type = .GROW },
-            },
-            .padding = .{ .x = 5, .y = 5 },
-            .childGap = 10,
-            .layoutDirection = .LEFT_TO_RIGHT,
-            .childAlignment = .{ .x = .LEFT, .y = .TOP },
-        };
-
-        OpenRectangleElement(
-            HashString(.{
-                .chars = @ptrCast(@constCast("string")),
-                .length = 6,
-            }, 0),
-            &layout_config,
-            @constCast(&RectangleElementConfig{
-                .color = .{ 200, 200, 200, 255 },
-                .cornerRadius = .{ .bottomLeft = 1, .topLeft = 1, .topRight = 1, .bottomRight = 1 },
-            }),
+        rectangle(
+            ID("name"),
+            layout(.{}),
+            rectangleConfig(.{}),
         );
-        defer CloseElementWithChildren();
+        defer closeParent();
     }
 
-    const layout = EndLayout();
-    std.debug.print("{any}", .{layout.internalArray[0..1]});
+    const _layout = endLayout();
+    std.debug.print("{any}", .{_layout.internalArray[0..1]});
+}
+
+fn ID(name: []const u8) ElementId {
+    return hashString(.{
+        .chars = @ptrCast(@constCast(name)),
+        .length = @intCast(name.len),
+    }, 0);
 }

@@ -12,16 +12,16 @@ pub fn build(b: *B) void {
             .optimize = optimize,
         });
 
-        clay_lib.addIncludePath(b.path("./c_files/include/"));
+        clay_lib.addIncludePath(b.path("./vendor/include/"));
         clay_lib.addCSourceFile(.{
-            .file = b.path("./c_files/source/clay.c"),
+            .file = b.path("./vendor/source/clay.c"),
         });
 
         break :blk clay_lib;
     };
 
     {
-        const module = b.addModule("zig-package-template", .{
+        const module = b.addModule("zclay", .{
             .root_source_file = b.path("src/root.zig"),
             .target = target,
             .optimize = optimize,
