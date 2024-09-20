@@ -228,6 +228,7 @@ pub fn ClayArray(comptime T: type) type {
 }
 
 const extern_elements = struct {
+    // TODO: should use @extern instead but zls does not yet support it well
     // Foreign function declarations
     extern "c" fn Clay_MinMemorySize() u32;
     extern "c" fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, offset: [*]u8) Arena;
