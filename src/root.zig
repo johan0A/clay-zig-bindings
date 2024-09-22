@@ -3,10 +3,13 @@ const builtin = @import("builtin");
 
 pub const String = extern struct {
     length: c_int,
-    chars: [*]c_char,
+    chars: [*c]c_char,
 };
 
-pub const Vector2 = [2]f32;
+pub const Vector2 = extern struct {
+    x: f32,
+    y: f32,
+};
 
 pub const Dimensions = extern struct {
     width: f32,
@@ -17,7 +20,7 @@ pub const Arena = extern struct {
     label: String,
     nextAllocation: u64,
     capacity: u64,
-    memory: [*]c_char,
+    memory: [*c]c_char,
 };
 
 pub const BoundingBox = extern struct {
@@ -48,7 +51,8 @@ pub const ElementId = extern struct {
     stringId: String,
 };
 
-pub const EnumBackingType = if (builtin.os.tag == .windows) u32 else u8;
+// pub const EnumBackingType = if (builtin.os.tag == .windows) u32 else u8;
+pub const EnumBackingType = u8;
 
 pub const RenderCommandType = enum(EnumBackingType) {
     None,
@@ -221,17 +225,17 @@ pub fn ClayArray(comptime T: type) type {
     return extern struct {
         capacity: u32,
         length: u32,
-        internalArray: [*]T,
+        internalArray: [*c]T,
     };
 }
 
 const extern_elements = struct {
     // TODO: should use @extern instead but zls does not yet support it well
     extern "c" fn Clay_MinMemorySize() u32;
-    extern "c" fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, offset: [*]u8) Arena;
-    extern "c" fn Clay_SetPointerState(position: [*]f32, pointerDown: bool) void;
+    extern "c" fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, offset: [*c]u8) Arena;
+    extern "c" fn Clay_SetPointerState(position: Vector2, pointerDown: bool) void;
     extern "c" fn Clay_Initialize(arena: Arena, layoutDimensions: Dimensions) void;
-    extern "c" fn Clay_UpdateScrollContainers(isPointerActive: bool, scrollDelta: [*]f32, deltaTime: f32) void;
+    extern "c" fn Clay_UpdateScrollContainers(isPointerActive: bool, scrollDelta: Vector2, deltaTime: f32) void;
     extern "c" fn Clay_SetLayoutDimensions(dimensions: Dimensions) void;
     extern "c" fn Clay_BeginLayout() void;
     extern "c" fn Clay_EndLayout() ClayArray(RenderCommand);
@@ -296,11 +300,11 @@ pub const borderConfig = extern_elements.Clay__StoreBorderElementConfig;
 pub const hashString = extern_elements.Clay__HashString;
 
 pub fn setPointerState(position: Vector2, pointerDown: bool) void {
-    extern_elements.Clay_SetPointerState(@ptrCast(@constCast(&position)), pointerDown);
+    extern_elements.Clay_SetPointerState(position, pointerDown);
 }
 
 pub fn updateScrollContainers(isPointerActive: bool, scrollDelta: Vector2, deltaTime: f32) void {
-    extern_elements.Clay_UpdateScrollContainers(isPointerActive, @ptrCast(@constCast(&scrollDelta)), deltaTime);
+    extern_elements.Clay_UpdateScrollContainers(isPointerActive, scrollDelta, deltaTime);
 }
 
 pub fn text(id: ElementId, string: []const u8, config: *TextElementConfig) void {

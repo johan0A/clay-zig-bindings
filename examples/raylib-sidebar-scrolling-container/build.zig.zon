@@ -3,8 +3,7 @@
     .version = "0.0.0",
     .dependencies = .{
         .zclay = .{
-            .url = "../../",
-            .hash = "1220d6ec9e404578dd1484fd60b767f1c91906c0cc19a86c4089a36c6366aa193fef",
+            .path = "../../",
         },
         .@"raylib-zig" = .{
             .url = "https://github.com/Not-Nik/raylib-zig/archive/f26b2ab084be5e2840b7451818590cc512b7b972.tar.gz",

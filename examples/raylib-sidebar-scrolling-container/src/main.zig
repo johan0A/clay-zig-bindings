@@ -114,7 +114,7 @@ pub fn main() anyerror!void {
         .window_highdpi = true,
         .window_resizable = true,
     });
-    rl.initWindow(1000, 1000, "Raylib Odin Example");
+    rl.initWindow(1000, 1000, "Raylib zig Example");
     rl.setTargetFPS(60);
 
     // loadFont(@embedFile("./resources/Roboto-Regular.ttf"), 0, 100);
@@ -131,8 +131,8 @@ pub fn main() anyerror!void {
 
         const mouse_pos = rl.getMousePosition();
         cl.setPointerState(.{
-            mouse_pos.x,
-            mouse_pos.y,
+            .x = mouse_pos.x,
+            .y = mouse_pos.y,
         }, rl.isMouseButtonDown(.mouse_button_left));
 
         cl.setLayoutDimensions(.{
