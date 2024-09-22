@@ -275,7 +275,7 @@ pub const setMeasureTextFunction = extern_elements.Clay_SetMeasureTextFunction;
 pub const renderCommandArray_Get = extern_elements.Clay_RenderCommandArray_Get;
 pub const setDebugModeEnabled = extern_elements.Clay_SetDebugModeEnabled;
 
-pub const rontainer = extern_elements.Clay__OpenContainerElement;
+pub const container = extern_elements.Clay__OpenContainerElement;
 pub const rectangle = extern_elements.Clay__OpenRectangleElement;
 pub const image = extern_elements.Clay__OpenImageElement;
 pub const scroll = extern_elements.Clay__OpenScrollElement;
