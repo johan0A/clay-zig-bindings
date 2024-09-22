@@ -4,7 +4,7 @@
     .dependencies = .{
         .zclay = .{
             .url = "../../",
-            .hash = "12208b0815fead7e03bb771a07ab432ad6fea66228b46c1329443ce8f55998d0a0cd",
+            .hash = "1220d6ec9e404578dd1484fd60b767f1c91906c0cc19a86c4089a36c6366aa193fef",
         },
         .@"raylib-zig" = .{
             .url = "https://github.com/Not-Nik/raylib-zig/archive/f26b2ab084be5e2840b7451818590cc512b7b972.tar.gz",
