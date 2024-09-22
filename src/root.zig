@@ -73,12 +73,12 @@ pub const TextWrapMode = enum(EnumBackingType) {
 };
 
 pub const TextElementConfig = extern struct {
-    textColor: Color,
-    fontId: u16,
-    fontSize: u16,
-    letterSpacing: u16,
-    lineSpacing: u16,
-    wrapMode: TextWrapMode,
+    textColor: Color = .{ 0, 0, 0, 255 },
+    fontId: u16 = 0,
+    fontSize: u16 = 20,
+    letterSpacing: u16 = 0,
+    lineSpacing: u16 = 0,
+    wrapMode: TextWrapMode = .Newlines,
 };
 
 pub const ImageElementConfig = extern struct {
@@ -160,8 +160,8 @@ pub const SizingType = enum(EnumBackingType) {
 };
 
 pub const SizingConstraintsMinMax = extern struct {
-    min: f32,
-    max: f32,
+    min: f32 = 0,
+    max: f32 = 0,
 };
 
 pub const SizingConstraints = extern union {
@@ -170,13 +170,13 @@ pub const SizingConstraints = extern union {
 };
 
 pub const SizingAxis = extern struct {
-    constraints: SizingConstraints,
-    type: SizingType,
+    constraints: SizingConstraints = .{ .sizePercent = 100 },
+    type: SizingType = .FIT,
 };
 
 pub const Sizing = extern struct {
-    width: SizingAxis,
-    height: SizingAxis,
+    width: SizingAxis = .{},
+    height: SizingAxis = .{},
 };
 
 pub const Padding = extern struct {
@@ -213,7 +213,7 @@ pub const LayoutConfig = extern struct {
     },
     padding: Padding = .{},
     childGap: u16 = 0,
-    layoutDirection: LayoutDirection = .TOP_TO_BOTTOM,
+    layoutDirection: LayoutDirection = .LEFT_TO_RIGHT,
     childAlignment: ChildAlignment = .{},
 };
 
@@ -227,12 +227,11 @@ pub fn ClayArray(comptime T: type) type {
 
 const extern_elements = struct {
     // TODO: should use @extern instead but zls does not yet support it well
-    // Foreign function declarations
     extern "c" fn Clay_MinMemorySize() u32;
     extern "c" fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, offset: [*]u8) Arena;
-    extern "c" fn Clay_SetPointerState(position: Vector2, pointerDown: bool) void;
+    extern "c" fn Clay_SetPointerState(position: [*]f32, pointerDown: bool) void;
     extern "c" fn Clay_Initialize(arena: Arena, layoutDimensions: Dimensions) void;
-    extern "c" fn Clay_UpdateScrollContainers(isPointerActive: bool, scrollDelta: Vector2, deltaTime: f32) void;
+    extern "c" fn Clay_UpdateScrollContainers(isPointerActive: bool, scrollDelta: [*]f32, deltaTime: f32) void;
     extern "c" fn Clay_SetLayoutDimensions(dimensions: Dimensions) void;
     extern "c" fn Clay_BeginLayout() void;
     extern "c" fn Clay_EndLayout() ClayArray(RenderCommand);
@@ -242,7 +241,6 @@ const extern_elements = struct {
     extern "c" fn Clay_RenderCommandArray_Get(array: *ClayArray(RenderCommand), index: i32) *RenderCommand;
     extern "c" fn Clay_SetDebugModeEnabled(enabled: bool) void;
 
-    // Private external functions
     extern "c" fn Clay__OpenContainerElement(id: ElementId, layoutConfig: *LayoutConfig) void;
     extern "c" fn Clay__OpenRectangleElement(id: ElementId, layoutConfig: *LayoutConfig, rectangleConfig: *RectangleElementConfig) void;
     extern "c" fn Clay__OpenTextElement(id: ElementId, text: String, textConfig: *TextElementConfig) void;
@@ -265,12 +263,9 @@ const extern_elements = struct {
     extern "c" fn Clay__HashString(toHash: String, index: u32) ElementId;
 };
 
-// Public function declarations
 pub const minMemorySize = extern_elements.Clay_MinMemorySize;
 pub const createArenaWithCapacityAndMemory = extern_elements.Clay_CreateArenaWithCapacityAndMemory;
-pub const setPointerState = extern_elements.Clay_SetPointerState;
 pub const initialize = extern_elements.Clay_Initialize;
-pub const updateScrollContainers = extern_elements.Clay_UpdateScrollContainers;
 pub const setLayoutDimensions = extern_elements.Clay_SetLayoutDimensions;
 pub const beginLayout = extern_elements.Clay_BeginLayout;
 pub const endLayout = extern_elements.Clay_EndLayout;
@@ -280,18 +275,16 @@ pub const setMeasureTextFunction = extern_elements.Clay_SetMeasureTextFunction;
 pub const renderCommandArray_Get = extern_elements.Clay_RenderCommandArray_Get;
 pub const setDebugModeEnabled = extern_elements.Clay_SetDebugModeEnabled;
 
-// Private function declarations
 pub const rontainer = extern_elements.Clay__OpenContainerElement;
 pub const rectangle = extern_elements.Clay__OpenRectangleElement;
-pub const text = extern_elements.Clay__OpenTextElement;
 pub const image = extern_elements.Clay__OpenImageElement;
 pub const scroll = extern_elements.Clay__OpenScrollElement;
 pub const floating = extern_elements.Clay__OpenFloatingElement;
 pub const border = extern_elements.Clay__OpenBorderElement;
-pub const sustomElement = extern_elements.Clay__OpenCustomElement;
+pub const customElement = extern_elements.Clay__OpenCustomElement;
 pub const closeParent = extern_elements.Clay__CloseElementWithChildren;
 pub const closeScroll = extern_elements.Clay__CloseScrollElement;
-pub const sloseFloating = extern_elements.Clay__CloseFloatingElement;
+pub const closeFloating = extern_elements.Clay__CloseFloatingElement;
 pub const layout = extern_elements.Clay__StoreLayoutConfig;
 pub const rectangleConfig = extern_elements.Clay__StoreRectangleElementConfig;
 pub const textConfig = extern_elements.Clay__StoreTextElementConfig;
@@ -301,6 +294,21 @@ pub const customConfig = extern_elements.Clay__StoreCustomElementConfig;
 pub const scrollConfig = extern_elements.Clay__StoreScrollElementConfig;
 pub const borderConfig = extern_elements.Clay__StoreBorderElementConfig;
 pub const hashString = extern_elements.Clay__HashString;
+
+pub fn setPointerState(position: Vector2, pointerDown: bool) void {
+    extern_elements.Clay_SetPointerState(@ptrCast(@constCast(&position)), pointerDown);
+}
+
+pub fn updateScrollContainers(isPointerActive: bool, scrollDelta: Vector2, deltaTime: f32) void {
+    extern_elements.Clay_UpdateScrollContainers(isPointerActive, @ptrCast(@constCast(&scrollDelta)), deltaTime);
+}
+
+pub fn text(id: ElementId, string: []const u8, config: *TextElementConfig) void {
+    extern_elements.Clay__OpenTextElement(id, .{
+        .chars = @ptrCast(@constCast(string)),
+        .length = @intCast(string.len),
+    }, config);
+}
 
 fn measureText(str: *String, conf: *TextElementConfig) callconv(.C) Dimensions {
     _ = str;
@@ -336,9 +344,28 @@ test {
     std.debug.print("{any}", .{_layout.internalArray[0..1]});
 }
 
-fn ID(name: []const u8) ElementId {
+pub fn ID(name: []const u8) ElementId {
     return hashString(.{
         .chars = @ptrCast(@constCast(name)),
         .length = @intCast(name.len),
     }, 0);
+}
+
+pub fn IDI(name: []const u8, index: u32) ElementId {
+    return hashString(.{
+        .chars = @ptrCast(@constCast(name)),
+        .length = @intCast(name.len),
+    }, index);
+}
+
+pub fn sizingGrow(sizeMinMax: SizingConstraintsMinMax) SizingAxis {
+    return .{ .type = .GROW, .constraints = .{ .sizeMinMax = sizeMinMax } };
+}
+
+pub fn sizingFixed(size: f32) SizingAxis {
+    return SizingAxis{ .type = .FIT, .constraints = .{ .sizeMinMax = .{ .max = size, .min = size } } };
+}
+
+pub fn SizingPercent(sizePercent: f32) SizingAxis {
+    return .{ .type = .PERCENT, .constraints = .{ .sizePercent = sizePercent } };
 }
