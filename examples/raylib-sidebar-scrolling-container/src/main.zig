@@ -86,14 +86,8 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
     return cl.endLayout();
 }
 
-// TODO: fix raylib bindings to allow this or replace raylib bindings
-// fn loadFont(file_data: ?[]const u8, fontId: u16, fontSize: i32) void {
-//     renderer.raylib_fonts[fontId] = rl.loadFontFromMemory(".ttf", file_data, fontSize * 2, null);
-//     rl.setTextureFilter(renderer.raylib_fonts[fontId].?.texture, .texture_filter_trilinear);
-// }
-
-fn loadFont(fileName: [*:0]const u8, fontId: u16, fontSize: i32) void {
-    renderer.raylib_fonts[fontId] = rl.loadFontEx(fileName, fontSize, null);
+fn loadFont(file_data: ?[]const u8, fontId: u16, fontSize: i32) void {
+    renderer.raylib_fonts[fontId] = rl.loadFontFromMemory(".ttf", file_data, fontSize * 2, null);
     rl.setTextureFilter(renderer.raylib_fonts[fontId].?.texture, .texture_filter_trilinear);
 }
 
@@ -117,8 +111,7 @@ pub fn main() anyerror!void {
     rl.initWindow(1000, 1000, "Raylib zig Example");
     rl.setTargetFPS(60);
 
-    // loadFont(@embedFile("./resources/Roboto-Regular.ttf"), 0, 100);
-    loadFont("./src/resources/Roboto-Regular.ttf", 0, 100);
+    loadFont(@embedFile("./resources/Roboto-Regular.ttf"), 0, 100);
     const profile_picture = rl.loadTextureFromImage(rl.loadImageFromMemory(".png", @embedFile("./resources/profile-picture.png")));
 
     var debug_mode_enabled = false;
