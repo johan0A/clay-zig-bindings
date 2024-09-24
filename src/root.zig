@@ -339,9 +339,13 @@ pub fn sizingGrow(sizeMinMax: SizingConstraintsMinMax) SizingAxis {
 }
 
 pub fn sizingFixed(size: f32) SizingAxis {
-    return SizingAxis{ .type = .FIT, .constraints = .{ .sizeMinMax = .{ .max = size, .min = size } } };
+    return .{ .type = .FIT, .constraints = .{ .sizeMinMax = .{ .max = size, .min = size } } };
 }
 
 pub fn sizingPercent(sizePercent: f32) SizingAxis {
     return .{ .type = .PERCENT, .constraints = .{ .sizePercent = sizePercent } };
+}
+
+pub fn sizingFit(sizeMinMax: SizingConstraintsMinMax) SizingAxis {
+    return .{ .type = SizingType.FIT, .constraints = .{ .sizeMinMax = sizeMinMax } };
 }
