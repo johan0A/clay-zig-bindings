@@ -226,7 +226,7 @@ pub fn measureText(clay_text: []const u8, config: *cl.TextElementConfig) cl.Dime
     if (temp_text_width < text_width) temp_text_width = text_width;
 
     return cl.Dimensions{
-        .height = text_height,
-        .width = temp_text_width * scale_factor + @as(f32, @floatFromInt(temp_byte_counter - 1)) * letter_spacing,
+        .h = text_height,
+        .w = temp_text_width * scale_factor + @as(f32, @floatFromInt(temp_byte_counter - 1)) * letter_spacing,
     };
 }

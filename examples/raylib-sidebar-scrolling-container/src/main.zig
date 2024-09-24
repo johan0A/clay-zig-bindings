@@ -8,9 +8,9 @@ const red: cl.Color = .{ 168, 66, 28, 255 };
 const orange: cl.Color = .{ 225, 138, 50, 255 };
 
 const sidebarItemLayout: cl.LayoutConfig = .{
-    .sizing = .{
-        .width = cl.sizingGrow(.{}),
-        .height = cl.sizingFixed(50),
+    .size = .{
+        .w = cl.sizingGrow(.{}),
+        .h = cl.sizingFixed(50),
     },
 };
 
@@ -25,10 +25,10 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
         cl.rectangle(
             cl.ID("OuterContainer"),
             cl.layout(.{
-                .layoutDirection = .LEFT_TO_RIGHT,
-                .sizing = .{ .height = cl.sizingGrow(.{}), .width = cl.sizingGrow(.{}) },
+                .direction = .LEFT_TO_RIGHT,
+                .size = .{ .h = cl.sizingGrow(.{}), .w = cl.sizingGrow(.{}) },
                 .padding = .{ .x = 16, .y = 16 },
-                .childGap = 16,
+                .gap = 16,
             }),
             cl.rectangleConfig(.{ .color = .{ 250, 250, 255, 255 } }),
         );
@@ -38,11 +38,11 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
             cl.rectangle(
                 cl.ID("SideBar"),
                 cl.layout(.{
-                    .layoutDirection = .TOP_TO_BOTTOM,
-                    .sizing = .{ .height = cl.sizingGrow(.{}), .width = cl.sizingFixed(300) },
+                    .direction = .TOP_TO_BOTTOM,
+                    .size = .{ .h = cl.sizingGrow(.{}), .w = cl.sizingFixed(300) },
                     .padding = .{ .x = 16, .y = 16 },
-                    .childAlignment = .{ .x = .CENTER, .y = .TOP },
-                    .childGap = 16,
+                    .alignment = .{ .x = .CENTER, .y = .TOP },
+                    .gap = 16,
                 }),
                 cl.rectangleConfig(.{ .color = light_grey }),
             );
@@ -52,10 +52,10 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
                 cl.rectangle(
                     cl.ID("ProfilePictureOuter"),
                     cl.layout(.{
-                        .sizing = .{ .width = cl.sizingGrow(.{}) },
+                        .size = .{ .w = cl.sizingGrow(.{}) },
                         .padding = .{ .x = 16, .y = 16 },
-                        .childAlignment = .{ .y = .CENTER },
-                        .childGap = 16,
+                        .alignment = .{ .y = .CENTER },
+                        .gap = 16,
                     }),
                     cl.rectangleConfig(.{ .color = red }),
                 );
@@ -63,8 +63,8 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
 
                 cl.image(
                     cl.ID("ProfilePicture"),
-                    cl.layout(.{ .sizing = .{ .height = cl.sizingFixed(60), .width = cl.sizingFixed(60) } }),
-                    cl.imageConfig(.{ .sourceDimensions = .{ .height = 60, .width = 60 }, .imageData = @ptrCast(@constCast(profile_picture)) }),
+                    cl.layout(.{ .size = .{ .h = cl.sizingFixed(60), .w = cl.sizingFixed(60) } }),
+                    cl.imageConfig(.{ .sourceDimensions = .{ .h = 60, .w = 60 }, .imageData = @ptrCast(@constCast(profile_picture)) }),
                 );
                 cl.closeParent();
                 cl.text(cl.ID("profileTitle"), "Clay - UI Library", cl.textConfig(.{ .fontSize = 24, .textColor = light_grey }));
@@ -77,7 +77,7 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
         {
             cl.rectangle(
                 cl.ID("MainContent"),
-                cl.layout(.{ .sizing = .{ .height = cl.sizingGrow(.{}), .width = cl.sizingGrow(.{}) } }),
+                cl.layout(.{ .size = .{ .h = cl.sizingGrow(.{}), .w = cl.sizingGrow(.{}) } }),
                 cl.rectangleConfig(.{ .color = light_grey }),
             );
             defer cl.closeParent();
@@ -99,7 +99,7 @@ pub fn main() anyerror!void {
     defer allocator.free(memory);
     const arena: cl.Arena = cl.createArenaWithCapacityAndMemory(min_memory_size, @ptrCast(memory));
 
-    cl.initialize(arena, .{ .height = 1000, .width = 1000 });
+    cl.initialize(arena, .{ .h = 1000, .w = 1000 });
     cl.setMeasureTextFunction(renderer.measureText);
 
     rl.setConfigFlags(.{
@@ -129,8 +129,8 @@ pub fn main() anyerror!void {
         }, rl.isMouseButtonDown(.mouse_button_left));
 
         cl.setLayoutDimensions(.{
-            .width = @floatFromInt(rl.getScreenWidth()),
-            .height = @floatFromInt(rl.getScreenHeight()),
+            .w = @floatFromInt(rl.getScreenWidth()),
+            .h = @floatFromInt(rl.getScreenHeight()),
         });
         var renderCommands = createLayout(&profile_picture);
 
@@ -138,4 +138,46 @@ pub fn main() anyerror!void {
         renderer.clayRaylibRender(&renderCommands, allocator);
         rl.endDrawing();
     }
+}
+
+test {
+    // explicit:
+    cl.rectangle(
+        cl.ID("SideBar"),
+        cl.layout(.{
+            .layoutDirection = .TOP_TO_BOTTOM,
+            .sizing = .{ .height = cl.sizingGrow(.{}), .width = cl.sizingFixed(300) },
+            .padding = .{ .x = 16, .y = 16 },
+            .childAlignment = .{ .x = .CENTER, .y = .TOP },
+            .childGap = 16,
+        }),
+        cl.rectangleConfig(.{ .color = light_grey }),
+    );
+
+    // compact:
+    cl.rectangle(
+        cl.ID("SideBar"),
+        cl.layout(.{
+            .direction = .TOP_TO_BOTTOM,
+            .size = .{ .h = cl.sizingGrow(.{}), .w = cl.sizingFixed(300) },
+            .padding = .{ .x = 16, .y = 16 },
+            .alignment = .{ .x = .CENTER, .y = .TOP },
+            .gap = 16,
+        }),
+        cl.rectangleConfig(.{ .color = cl.light_grey }),
+    );
+
+    // explicit:
+    cl.rectangle(
+        cl.ID("SideBar"),
+        cl.layout(.{ .layoutDirection = .TOP_TO_BOTTOM, .sizing = .{ .height = cl.sizingGrow(.{}), .width = cl.sizingFixed(300) }, .padding = .{ .x = 16, .y = 16 }, .childAlignment = .{ .x = .CENTER, .y = .TOP }, .childGap = 16 }),
+        cl.rectangleConfig(.{ .color = light_grey }),
+    );
+
+    // compact:
+    cl.rectangle(
+        cl.ID("SideBar"),
+        cl.layout(.{ .direction = .TOP_TO_BOTTOM, .size = .{ .h = cl.sizingGrow(.{}), .w = cl.sizingFixed(300) }, .padding = .{ .x = 16, .y = 16 }, .alignment = .{ .x = .CENTER, .y = .TOP }, .gap = 16 }),
+        cl.rectangleConfig(.{ .color = cl.light_grey }),
+    );
 }

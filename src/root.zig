@@ -12,8 +12,8 @@ pub const Vector2 = extern struct {
 };
 
 pub const Dimensions = extern struct {
-    width: f32,
-    height: f32,
+    w: f32,
+    h: f32,
 };
 
 pub const Arena = extern struct {
@@ -51,7 +51,6 @@ pub const ElementId = extern struct {
     stringId: String,
 };
 
-// pub const EnumBackingType = if (builtin.os.tag == .windows) u32 else u8;
 pub const EnumBackingType = u8;
 
 pub const RenderCommandType = enum(EnumBackingType) {
@@ -179,8 +178,10 @@ pub const SizingAxis = extern struct {
 };
 
 pub const Sizing = extern struct {
-    width: SizingAxis = .{},
-    height: SizingAxis = .{},
+    /// width
+    w: SizingAxis = .{},
+    /// height
+    h: SizingAxis = .{},
 };
 
 pub const Padding = extern struct {
@@ -211,14 +212,19 @@ pub const ChildAlignment = extern struct {
 };
 
 pub const LayoutConfig = extern struct {
-    sizing: Sizing = .{
-        .height = .{ .constraints = .{ .sizePercent = 100 }, .type = .GROW },
-        .width = .{ .constraints = .{ .sizePercent = 100 }, .type = .GROW },
+    /// sizing of the element
+    size: Sizing = .{
+        .h = .{ .constraints = .{ .sizePercent = 100 }, .type = .GROW },
+        .w = .{ .constraints = .{ .sizePercent = 100 }, .type = .GROW },
     },
+    /// padding arround children
     padding: Padding = .{},
-    childGap: u16 = 0,
-    layoutDirection: LayoutDirection = .LEFT_TO_RIGHT,
-    childAlignment: ChildAlignment = .{},
+    /// gap between the children
+    gap: u16 = 0,
+    /// direction of the children's layout
+    direction: LayoutDirection = .LEFT_TO_RIGHT,
+    /// alignement of the children
+    alignment: ChildAlignment = .{},
 };
 
 pub fn ClayArray(comptime T: type) type {
