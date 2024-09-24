@@ -88,7 +88,7 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
 
 fn loadFont(file_data: ?[]const u8, fontId: u16, fontSize: i32) void {
     renderer.raylib_fonts[fontId] = rl.loadFontFromMemory(".ttf", file_data, fontSize * 2, null);
-    rl.setTextureFilter(renderer.raylib_fonts[fontId].?.texture, .texture_filter_trilinear);
+    rl.setTextureFilter(renderer.raylib_fonts[fontId].?.texture, .texture_filter_bilinear);
 }
 
 pub fn main() anyerror!void {

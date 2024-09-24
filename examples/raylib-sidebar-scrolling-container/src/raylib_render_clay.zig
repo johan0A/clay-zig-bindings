@@ -17,7 +17,7 @@ pub var raylib_fonts: [10]?rl.Font = .{null} ** 10;
 pub fn clayRaylibRender(renderCommands: *cl.ClayArray(cl.RenderCommand), allocator: std.mem.Allocator) void {
     var i: usize = 0;
     while (i < renderCommands.length) : (i += 1) {
-        const renderCommand = cl.renderCommandArray_Get(renderCommands, @intCast(i));
+        const renderCommand = cl.renderCommandArrayGet(renderCommands, @intCast(i));
         const boundingBox = renderCommand.boundingBox;
         switch (renderCommand.commandType) {
             .None => {},
@@ -185,11 +185,11 @@ pub fn clayRaylibRender(renderCommands: *cl.ClayArray(cl.RenderCommand), allocat
     }
 }
 
-pub fn measureText(clay_text: *cl.String, config: *cl.TextElementConfig) callconv(.C) cl.Dimensions {
+pub fn measureText(clay_text: []const u8, config: *cl.TextElementConfig) cl.Dimensions {
     const font = raylib_fonts[config.fontId].?;
-    const text: []const u8 = @ptrCast(clay_text.chars[0..@intCast(clay_text.length)]);
+    const text: []const u8 = clay_text;
     const font_size: f32 = @floatFromInt(config.fontSize);
-    const spacing: f32 = @floatFromInt(config.letterSpacing);
+    const letter_spacing: f32 = @floatFromInt(config.letterSpacing);
     const line_spacing = config.lineSpacing;
 
     var temp_byte_counter: usize = 0;
@@ -227,6 +227,6 @@ pub fn measureText(clay_text: *cl.String, config: *cl.TextElementConfig) callcon
 
     return cl.Dimensions{
         .height = text_height,
-        .width = temp_text_width * scale_factor + @as(f32, @floatFromInt(temp_byte_counter - 1)) * spacing,
+        .width = temp_text_width * scale_factor + @as(f32, @floatFromInt(temp_byte_counter - 1)) * letter_spacing,
     };
 }

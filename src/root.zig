@@ -229,8 +229,9 @@ pub fn ClayArray(comptime T: type) type {
     };
 }
 
-const extern_elements = struct {
-    // TODO: should use @extern instead but zls does not yet support it well
+/// for direct calls to the clay c library
+pub const extern_functions = struct {
+    // TODO: should use @extern instead but zls does not yet support it well and that is more important
     extern "c" fn Clay_MinMemorySize() u32;
     extern "c" fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, offset: [*c]u8) Arena;
     extern "c" fn Clay_SetPointerState(position: Vector2, pointerDown: bool) void;
@@ -267,99 +268,70 @@ const extern_elements = struct {
     extern "c" fn Clay__HashString(toHash: String, index: u32) ElementId;
 };
 
-pub const minMemorySize = extern_elements.Clay_MinMemorySize;
-pub const createArenaWithCapacityAndMemory = extern_elements.Clay_CreateArenaWithCapacityAndMemory;
-pub const initialize = extern_elements.Clay_Initialize;
-pub const setLayoutDimensions = extern_elements.Clay_SetLayoutDimensions;
-pub const beginLayout = extern_elements.Clay_BeginLayout;
-pub const endLayout = extern_elements.Clay_EndLayout;
-pub const pointerOver = extern_elements.Clay_PointerOver;
-pub const getScrollContainerData = extern_elements.Clay_GetScrollContainerData;
-pub const setMeasureTextFunction = extern_elements.Clay_SetMeasureTextFunction;
-pub const renderCommandArray_Get = extern_elements.Clay_RenderCommandArray_Get;
-pub const setDebugModeEnabled = extern_elements.Clay_SetDebugModeEnabled;
+pub const minMemorySize = extern_functions.Clay_MinMemorySize;
+pub const createArenaWithCapacityAndMemory = extern_functions.Clay_CreateArenaWithCapacityAndMemory;
+pub const initialize = extern_functions.Clay_Initialize;
+pub const setLayoutDimensions = extern_functions.Clay_SetLayoutDimensions;
+pub const beginLayout = extern_functions.Clay_BeginLayout;
+pub const endLayout = extern_functions.Clay_EndLayout;
+pub const pointerOver = extern_functions.Clay_PointerOver;
+pub const getScrollContainerData = extern_functions.Clay_GetScrollContainerData;
+pub const renderCommandArrayGet = extern_functions.Clay_RenderCommandArray_Get;
+pub const setDebugModeEnabled = extern_functions.Clay_SetDebugModeEnabled;
 
-pub const container = extern_elements.Clay__OpenContainerElement;
-pub const rectangle = extern_elements.Clay__OpenRectangleElement;
-pub const image = extern_elements.Clay__OpenImageElement;
-pub const scroll = extern_elements.Clay__OpenScrollElement;
-pub const floating = extern_elements.Clay__OpenFloatingElement;
-pub const border = extern_elements.Clay__OpenBorderElement;
-pub const customElement = extern_elements.Clay__OpenCustomElement;
-pub const closeParent = extern_elements.Clay__CloseElementWithChildren;
-pub const closeScroll = extern_elements.Clay__CloseScrollElement;
-pub const closeFloating = extern_elements.Clay__CloseFloatingElement;
-pub const layout = extern_elements.Clay__StoreLayoutConfig;
-pub const rectangleConfig = extern_elements.Clay__StoreRectangleElementConfig;
-pub const textConfig = extern_elements.Clay__StoreTextElementConfig;
-pub const imageConfig = extern_elements.Clay__StoreImageElementConfig;
-pub const floatingConfig = extern_elements.Clay__StoreFloatingElementConfig;
-pub const customConfig = extern_elements.Clay__StoreCustomElementConfig;
-pub const scrollConfig = extern_elements.Clay__StoreScrollElementConfig;
-pub const borderConfig = extern_elements.Clay__StoreBorderElementConfig;
-pub const hashString = extern_elements.Clay__HashString;
+pub const container = extern_functions.Clay__OpenContainerElement;
+pub const rectangle = extern_functions.Clay__OpenRectangleElement;
+pub const image = extern_functions.Clay__OpenImageElement;
+pub const scroll = extern_functions.Clay__OpenScrollElement;
+pub const floating = extern_functions.Clay__OpenFloatingElement;
+pub const border = extern_functions.Clay__OpenBorderElement;
+pub const customElement = extern_functions.Clay__OpenCustomElement;
+pub const closeParent = extern_functions.Clay__CloseElementWithChildren;
+pub const closeScroll = extern_functions.Clay__CloseScrollElement;
+pub const closeFloating = extern_functions.Clay__CloseFloatingElement;
+pub const layout = extern_functions.Clay__StoreLayoutConfig;
+pub const rectangleConfig = extern_functions.Clay__StoreRectangleElementConfig;
+pub const textConfig = extern_functions.Clay__StoreTextElementConfig;
+pub const imageConfig = extern_functions.Clay__StoreImageElementConfig;
+pub const floatingConfig = extern_functions.Clay__StoreFloatingElementConfig;
+pub const customConfig = extern_functions.Clay__StoreCustomElementConfig;
+pub const scrollConfig = extern_functions.Clay__StoreScrollElementConfig;
+pub const borderConfig = extern_functions.Clay__StoreBorderElementConfig;
+pub const hashString = extern_functions.Clay__HashString;
 
 pub fn setPointerState(position: Vector2, pointerDown: bool) void {
-    extern_elements.Clay_SetPointerState(position, pointerDown);
+    extern_functions.Clay_SetPointerState(position, pointerDown);
 }
 
 pub fn updateScrollContainers(isPointerActive: bool, scrollDelta: Vector2, deltaTime: f32) void {
-    extern_elements.Clay_UpdateScrollContainers(isPointerActive, scrollDelta, deltaTime);
+    extern_functions.Clay_UpdateScrollContainers(isPointerActive, scrollDelta, deltaTime);
 }
 
-pub fn text(id: ElementId, string: []const u8, config: *TextElementConfig) void {
-    extern_elements.Clay__OpenTextElement(id, .{
+pub fn setMeasureTextFunction(comptime measureTextFunction: fn ([]const u8, *TextElementConfig) Dimensions) void {
+    extern_functions.Clay_SetMeasureTextFunction(struct {
+        pub fn f(string: *String, config: *TextElementConfig) callconv(.C) Dimensions {
+            return measureTextFunction(@ptrCast(string.chars[0..@intCast(string.length)]), config);
+        }
+    }.f);
+}
+
+pub fn makeClayString(string: []const u8) String {
+    return .{
         .chars = @ptrCast(@constCast(string)),
         .length = @intCast(string.len),
-    }, config);
-}
-
-fn measureText(str: *String, conf: *TextElementConfig) callconv(.C) Dimensions {
-    _ = str;
-    _ = conf;
-    return Dimensions{
-        .height = 10,
-        .width = 10,
     };
 }
 
-test {
-    const allocator = std.testing.allocator;
-
-    const min_memory_size: u32 = minMemorySize();
-    const memory = try allocator.alloc(u8, min_memory_size);
-    defer allocator.free(memory);
-    const arena: Arena = createArenaWithCapacityAndMemory(min_memory_size, @ptrCast(memory));
-    setMeasureTextFunction(measureText);
-    initialize(arena, .{ .width = 1000, .height = 1000 });
-
-    beginLayout();
-
-    {
-        rectangle(
-            ID("name"),
-            layout(.{}),
-            rectangleConfig(.{}),
-        );
-        defer closeParent();
-    }
-
-    const _layout = endLayout();
-    std.debug.print("{any}", .{_layout.internalArray[0..1]});
+pub fn text(id: ElementId, string: []const u8, config: *TextElementConfig) void {
+    extern_functions.Clay__OpenTextElement(id, makeClayString(string), config);
 }
 
-pub fn ID(name: []const u8) ElementId {
-    return hashString(.{
-        .chars = @ptrCast(@constCast(name)),
-        .length = @intCast(name.len),
-    }, 0);
+pub fn ID(string: []const u8) ElementId {
+    return hashString(makeClayString(string), 0);
 }
 
-pub fn IDI(name: []const u8, index: u32) ElementId {
-    return hashString(.{
-        .chars = @ptrCast(@constCast(name)),
-        .length = @intCast(name.len),
-    }, index);
+pub fn IDI(string: []const u8, index: u32) ElementId {
+    return hashString(makeClayString(string), index);
 }
 
 pub fn sizingGrow(sizeMinMax: SizingConstraintsMinMax) SizingAxis {
@@ -370,6 +342,6 @@ pub fn sizingFixed(size: f32) SizingAxis {
     return SizingAxis{ .type = .FIT, .constraints = .{ .sizeMinMax = .{ .max = size, .min = size } } };
 }
 
-pub fn SizingPercent(sizePercent: f32) SizingAxis {
+pub fn sizingPercent(sizePercent: f32) SizingAxis {
     return .{ .type = .PERCENT, .constraints = .{ .sizePercent = sizePercent } };
 }
