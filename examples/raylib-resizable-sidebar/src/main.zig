@@ -7,7 +7,7 @@ const light_grey: cl.Color = .{ 224, 215, 210, 255 };
 const red: cl.Color = .{ 168, 66, 28, 255 };
 const orange: cl.Color = .{ 225, 138, 50, 255 };
 
-const sidebarItemLayout: cl.LayoutConfig = .{
+const sidebar_item_layout: cl.LayoutConfig = .{
     .size = .{
         .w = cl.sizingGrow(.{}),
         .h = cl.sizingFixed(50),
@@ -51,7 +51,7 @@ var side_bar_handle: struct {
 };
 
 fn sidebarItemCompoment(index: usize) void {
-    cl.rectangle(cl.IDI("SidebarBlob", @intCast(index)), cl.layout(sidebarItemLayout), cl.rectangleConfig(.{ .color = orange }));
+    cl.rectangle(cl.IDI("SidebarBlob", @intCast(index)), cl.layout(sidebar_item_layout), cl.rectangleConfig(.{ .color = orange }));
     defer cl.closeParent();
 }
 
@@ -90,10 +90,10 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
                 cl.image(
                     cl.ID("ProfilePicture"),
                     cl.layout(.{ .size = .{ .h = cl.sizingFixed(60), .w = cl.sizingFixed(60) } }),
-                    cl.imageConfig(.{ .sourceDimensions = .{ .h = 60, .w = 60 }, .imageData = @ptrCast(@constCast(profile_picture)) }),
+                    cl.imageConfig(.{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(@constCast(profile_picture)) }),
                 );
                 cl.closeParent();
-                cl.text(cl.ID("profileTitle"), "Clay - UI Library", cl.textConfig(.{ .fontSize = 24, .textColor = light_grey }));
+                cl.text(cl.ID("profileTitle"), "Clay - UI Library", cl.textConfig(.{ .font_size = 24, .text_color = light_grey }));
             }
 
             for (0..5) |i| {
@@ -122,9 +122,9 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
     return cl.endLayout();
 }
 
-fn loadFont(file_data: ?[]const u8, fontId: u16, fontSize: i32) void {
-    renderer.raylib_fonts[fontId] = rl.loadFontFromMemory(".ttf", file_data, fontSize * 2, null);
-    rl.setTextureFilter(renderer.raylib_fonts[fontId].?.texture, .texture_filter_bilinear);
+fn loadFont(file_data: ?[]const u8, font_id: u16, font_size: i32) void {
+    renderer.raylib_fonts[font_id] = rl.loadFontFromMemory(".ttf", file_data, font_size * 2, null);
+    rl.setTextureFilter(renderer.raylib_fonts[font_id].?.texture, .texture_filter_bilinear);
 }
 
 pub fn main() anyerror!void {
@@ -168,10 +168,10 @@ pub fn main() anyerror!void {
             .w = @floatFromInt(rl.getScreenWidth()),
             .h = @floatFromInt(rl.getScreenHeight()),
         });
-        var renderCommands = createLayout(&profile_picture);
+        var render_commands = createLayout(&profile_picture);
 
         rl.beginDrawing();
-        renderer.clayRaylibRender(&renderCommands, allocator);
+        renderer.clayRaylibRender(&render_commands, allocator);
         rl.endDrawing();
 
         side_bar_handle.tick();

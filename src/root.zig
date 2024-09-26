@@ -18,7 +18,7 @@ pub const Dimensions = extern struct {
 
 pub const Arena = extern struct {
     label: String,
-    nextAllocation: u64,
+    next_allocation: u64,
     capacity: u64,
     memory: [*c]c_char,
 };
@@ -33,10 +33,10 @@ pub const BoundingBox = extern struct {
 pub const Color = [4]f32;
 
 pub const CornerRadius = extern struct {
-    topLeft: f32 = 0,
-    topRight: f32 = 0,
-    bottomLeft: f32 = 0,
-    bottomRight: f32 = 0,
+    top_left: f32 = 0,
+    top_right: f32 = 0,
+    bottom_left: f32 = 0,
+    bottom_right: f32 = 0,
 };
 
 pub const BorderData = extern struct {
@@ -47,8 +47,8 @@ pub const BorderData = extern struct {
 pub const ElementId = extern struct {
     id: u32,
     offset: u32,
-    baseId: u32,
-    stringId: String,
+    base_id: u32,
+    string_id: String,
 };
 
 pub const EnumBackingType = u8;
@@ -66,7 +66,7 @@ pub const RenderCommandType = enum(EnumBackingType) {
 
 pub const RectangleElementConfig = extern struct {
     color: Color = .{ 255, 255, 255, 255 },
-    cornerRadius: CornerRadius = .{},
+    corner_radius: CornerRadius = .{},
 };
 
 pub const TextWrapMode = enum(EnumBackingType) {
@@ -76,17 +76,17 @@ pub const TextWrapMode = enum(EnumBackingType) {
 };
 
 pub const TextElementConfig = extern struct {
-    textColor: Color = .{ 0, 0, 0, 255 },
-    fontId: u16 = 0,
-    fontSize: u16 = 20,
-    letterSpacing: u16 = 0,
+    text_color: Color = .{ 0, 0, 0, 255 },
+    font_id: u16 = 0,
+    font_size: u16 = 20,
+    letter_spacing: u16 = 0,
     lineSpacing: u16 = 0,
     wrapMode: TextWrapMode = .Newlines,
 };
 
 pub const ImageElementConfig = extern struct {
-    imageData: *anyopaque,
-    sourceDimensions: Dimensions,
+    image_data: *anyopaque,
+    source_dimensions: Dimensions,
 };
 
 pub const CustomElementConfig = extern struct {
@@ -99,7 +99,7 @@ pub const BorderElementConfig = extern struct {
     top: BorderData,
     bottom: BorderData,
     betweenChildren: BorderData,
-    cornerRadius: CornerRadius,
+    corner_radius: CornerRadius,
 };
 
 pub const ScrollElementConfig = extern struct {
@@ -127,31 +127,31 @@ pub const FloatingAttachPoints = extern struct {
 pub const FloatingElementConfig = extern struct {
     offset: Vector2,
     expand: Dimensions,
-    zIndex: u16,
-    parentId: u32,
+    z_index: u16,
+    parent_id: u32,
     attachment: FloatingAttachPoints,
 };
 
 pub const ElementConfigUnion = extern union {
-    rectangleElementConfig: *RectangleElementConfig,
-    textElementConfig: *TextElementConfig,
-    imageElementConfig: *ImageElementConfig,
+    rectangle_element_config: *RectangleElementConfig,
+    text_element_config: *TextElementConfig,
+    image_element_config: *ImageElementConfig,
     customElementConfig: *CustomElementConfig,
-    borderElementConfig: *BorderElementConfig,
+    border_element_config: *BorderElementConfig,
 };
 
 pub const RenderCommand = extern struct {
-    boundingBox: BoundingBox,
+    bounding_box: BoundingBox,
     config: ElementConfigUnion,
     text: String,
     id: u32,
-    commandType: RenderCommandType,
+    command_type: RenderCommandType,
 };
 
 pub const ScrollContainerData = extern struct {
-    scrollPosition: *Vector2,
-    scrollContainerDimensions: Dimensions,
-    contentDimensions: Dimensions,
+    scroll_position: *Vector2,
+    scroll_container_dimensions: Dimensions,
+    content_dimensions: Dimensions,
     config: ScrollElementConfig,
     found: bool,
 };
@@ -168,12 +168,12 @@ pub const SizingConstraintsMinMax = extern struct {
 };
 
 pub const SizingConstraints = extern union {
-    sizeMinMax: SizingConstraintsMinMax,
-    sizePercent: f32,
+    size_minmax: SizingConstraintsMinMax,
+    size_percent: f32,
 };
 
 pub const SizingAxis = extern struct {
-    constraints: SizingConstraints = .{ .sizePercent = 100 },
+    constraints: SizingConstraints = .{ .size_percent = 100 },
     type: SizingType = .FIT,
 };
 
@@ -214,8 +214,8 @@ pub const ChildAlignment = extern struct {
 pub const LayoutConfig = extern struct {
     /// sizing of the element
     size: Sizing = .{
-        .h = .{ .constraints = .{ .sizePercent = 100 }, .type = .GROW },
-        .w = .{ .constraints = .{ .sizePercent = 100 }, .type = .GROW },
+        .h = .{ .constraints = .{ .size_percent = 100 }, .type = .GROW },
+        .w = .{ .constraints = .{ .size_percent = 100 }, .type = .GROW },
     },
     /// padding arround children
     padding: Padding = .{},
@@ -231,7 +231,7 @@ pub fn ClayArray(comptime T: type) type {
     return extern struct {
         capacity: u32,
         length: u32,
-        internalArray: [*c]T,
+        internal_array: [*c]T,
     };
 }
 
@@ -305,12 +305,12 @@ pub const scrollConfig = extern_functions.Clay__StoreScrollElementConfig;
 pub const borderConfig = extern_functions.Clay__StoreBorderElementConfig;
 pub const hashString = extern_functions.Clay__HashString;
 
-pub fn setPointerState(position: Vector2, pointerDown: bool) void {
-    extern_functions.Clay_SetPointerState(position, pointerDown);
+pub fn setPointerState(position: Vector2, pointer_down: bool) void {
+    extern_functions.Clay_SetPointerState(position, pointer_down);
 }
 
-pub fn updateScrollContainers(isPointerActive: bool, scrollDelta: Vector2, deltaTime: f32) void {
-    extern_functions.Clay_UpdateScrollContainers(isPointerActive, scrollDelta, deltaTime);
+pub fn updateScrollContainers(is_pointer_active: bool, scroll_delta: Vector2, delta_time: f32) void {
+    extern_functions.Clay_UpdateScrollContainers(is_pointer_active, scroll_delta, delta_time);
 }
 
 pub fn setMeasureTextFunction(comptime measureTextFunction: fn ([]const u8, *TextElementConfig) Dimensions) void {
@@ -340,18 +340,18 @@ pub fn IDI(string: []const u8, index: u32) ElementId {
     return hashString(makeClayString(string), index);
 }
 
-pub fn sizingGrow(sizeMinMax: SizingConstraintsMinMax) SizingAxis {
-    return .{ .type = .GROW, .constraints = .{ .sizeMinMax = sizeMinMax } };
+pub fn sizingGrow(size_minmax: SizingConstraintsMinMax) SizingAxis {
+    return .{ .type = .GROW, .constraints = .{ .size_minmax = size_minmax } };
 }
 
 pub fn sizingFixed(size: f32) SizingAxis {
-    return .{ .type = .FIT, .constraints = .{ .sizeMinMax = .{ .max = size, .min = size } } };
+    return .{ .type = .FIT, .constraints = .{ .size_minmax = .{ .max = size, .min = size } } };
 }
 
-pub fn sizingPercent(sizePercent: f32) SizingAxis {
-    return .{ .type = .PERCENT, .constraints = .{ .sizePercent = sizePercent } };
+pub fn sizingPercent(size_percent: f32) SizingAxis {
+    return .{ .type = .PERCENT, .constraints = .{ .size_percent = size_percent } };
 }
 
-pub fn sizingFit(sizeMinMax: SizingConstraintsMinMax) SizingAxis {
-    return .{ .type = SizingType.FIT, .constraints = .{ .sizeMinMax = sizeMinMax } };
+pub fn sizingFit(size_minmax: SizingConstraintsMinMax) SizingAxis {
+    return .{ .type = SizingType.FIT, .constraints = .{ .size_minmax = size_minmax } };
 }
