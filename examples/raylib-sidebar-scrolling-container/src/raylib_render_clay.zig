@@ -33,7 +33,7 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
                     rl.Vector2{ .x = bounding_box.x, .y = bounding_box.y },
                     @floatFromInt(render_command.config.text_element_config.font_size),
                     @floatFromInt(render_command.config.text_element_config.letter_spacing),
-                    clayColorToRaylibColor(render_command.config.text_element_config.text_color),
+                    clayColorToRaylibColor(render_command.config.text_element_config.color),
                 );
             },
             .Image => {

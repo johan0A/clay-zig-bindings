@@ -76,12 +76,12 @@ pub const TextWrapMode = enum(EnumBackingType) {
 };
 
 pub const TextElementConfig = extern struct {
-    text_color: Color = .{ 0, 0, 0, 255 },
+    color: Color = .{ 0, 0, 0, 255 },
     font_id: u16 = 0,
     font_size: u16 = 20,
     letter_spacing: u16 = 0,
-    lineSpacing: u16 = 0,
-    wrapMode: TextWrapMode = .Newlines,
+    line_spacing: u16 = 0,
+    wrap_mode: TextWrapMode = .Newlines,
 };
 
 pub const ImageElementConfig = extern struct {
@@ -90,7 +90,7 @@ pub const ImageElementConfig = extern struct {
 };
 
 pub const CustomElementConfig = extern struct {
-    customData: *anyopaque,
+    custom_data: *anyopaque,
 };
 
 pub const BorderElementConfig = extern struct {
@@ -98,7 +98,7 @@ pub const BorderElementConfig = extern struct {
     right: BorderData,
     top: BorderData,
     bottom: BorderData,
-    betweenChildren: BorderData,
+    between_children: BorderData,
     corner_radius: CornerRadius,
 };
 
@@ -136,7 +136,7 @@ pub const ElementConfigUnion = extern union {
     rectangle_element_config: *RectangleElementConfig,
     text_element_config: *TextElementConfig,
     image_element_config: *ImageElementConfig,
-    customElementConfig: *CustomElementConfig,
+    custom_element_config: *CustomElementConfig,
     border_element_config: *BorderElementConfig,
 };
 
@@ -240,9 +240,9 @@ pub const extern_functions = struct {
     // TODO: should use @extern instead but zls does not yet support it well and that is more important
     extern "c" fn Clay_MinMemorySize() u32;
     extern "c" fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, offset: [*c]u8) Arena;
-    extern "c" fn Clay_SetPointerState(position: Vector2, pointerDown: bool) void;
-    extern "c" fn Clay_Initialize(arena: Arena, layoutDimensions: Dimensions) void;
-    extern "c" fn Clay_UpdateScrollContainers(isPointerActive: bool, scrollDelta: Vector2, deltaTime: f32) void;
+    extern "c" fn Clay_SetPointerState(position: Vector2, pointer_down: bool) void;
+    extern "c" fn Clay_Initialize(arena: Arena, layout_dimensions: Dimensions) void;
+    extern "c" fn Clay_UpdateScrollContainers(is_pointer_active: bool, scroll_delta: Vector2, delta_time: f32) void;
     extern "c" fn Clay_SetLayoutDimensions(dimensions: Dimensions) void;
     extern "c" fn Clay_BeginLayout() void;
     extern "c" fn Clay_EndLayout() ClayArray(RenderCommand);
@@ -252,14 +252,14 @@ pub const extern_functions = struct {
     extern "c" fn Clay_RenderCommandArray_Get(array: *ClayArray(RenderCommand), index: i32) *RenderCommand;
     extern "c" fn Clay_SetDebugModeEnabled(enabled: bool) void;
 
-    extern "c" fn Clay__OpenContainerElement(id: ElementId, layoutConfig: *LayoutConfig) void;
-    extern "c" fn Clay__OpenRectangleElement(id: ElementId, layoutConfig: *LayoutConfig, rectangleConfig: *RectangleElementConfig) void;
-    extern "c" fn Clay__OpenTextElement(id: ElementId, text: String, textConfig: *TextElementConfig) void;
-    extern "c" fn Clay__OpenImageElement(id: ElementId, layoutConfig: *LayoutConfig, imageConfig: *ImageElementConfig) void;
-    extern "c" fn Clay__OpenScrollElement(id: ElementId, layoutConfig: *LayoutConfig, scrollConfig: *ScrollElementConfig) void;
-    extern "c" fn Clay__OpenFloatingElement(id: ElementId, layoutConfig: *LayoutConfig, floatingConfig: *FloatingElementConfig) void;
-    extern "c" fn Clay__OpenBorderElement(id: ElementId, layoutConfig: *LayoutConfig, borderConfig: *BorderElementConfig) void;
-    extern "c" fn Clay__OpenCustomElement(id: ElementId, layoutConfig: *LayoutConfig, customConfig: *CustomElementConfig) void;
+    extern "c" fn Clay__OpenContainerElement(id: ElementId, layout_config: *LayoutConfig) void;
+    extern "c" fn Clay__OpenRectangleElement(id: ElementId, layout_config: *LayoutConfig, rectangle_config: *RectangleElementConfig) void;
+    extern "c" fn Clay__OpenTextElement(id: ElementId, text: String, text_config: *TextElementConfig) void;
+    extern "c" fn Clay__OpenImageElement(id: ElementId, layout_config: *LayoutConfig, image_config: *ImageElementConfig) void;
+    extern "c" fn Clay__OpenScrollElement(id: ElementId, layout_config: *LayoutConfig, scroll_config: *ScrollElementConfig) void;
+    extern "c" fn Clay__OpenFloatingElement(id: ElementId, layout_config: *LayoutConfig, floating_config: *FloatingElementConfig) void;
+    extern "c" fn Clay__OpenBorderElement(id: ElementId, layout_config: *LayoutConfig, border_config: *BorderElementConfig) void;
+    extern "c" fn Clay__OpenCustomElement(id: ElementId, layout_config: *LayoutConfig, custom_config: *CustomElementConfig) void;
     extern "c" fn Clay__CloseElementWithChildren() void;
     extern "c" fn Clay__CloseScrollElement() void;
     extern "c" fn Clay__CloseFloatingElement() void;
@@ -271,7 +271,7 @@ pub const extern_functions = struct {
     extern "c" fn Clay__StoreCustomElementConfig(config: CustomElementConfig) *CustomElementConfig;
     extern "c" fn Clay__StoreScrollElementConfig(config: ScrollElementConfig) *ScrollElementConfig;
     extern "c" fn Clay__StoreBorderElementConfig(config: BorderElementConfig) *BorderElementConfig;
-    extern "c" fn Clay__HashString(toHash: String, index: u32) ElementId;
+    extern "c" fn Clay__HashString(to_hash: String, index: u32) ElementId;
 };
 
 pub const minMemorySize = extern_functions.Clay_MinMemorySize;
