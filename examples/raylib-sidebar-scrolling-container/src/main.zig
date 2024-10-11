@@ -67,7 +67,7 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
                     cl.imageConfig(.{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(@constCast(profile_picture)) }),
                 );
                 cl.closeParent();
-                cl.text(cl.ID("profileTitle"), "Clay - UI Library", cl.textConfig(.{ .font_size = 24, .text_color = light_grey }));
+                cl.text(cl.ID("profileTitle"), "Clay - UI Library", cl.textConfig(.{ .font_size = 24, .color = light_grey }));
             }
 
             for (0..5) |i| {

@@ -26,7 +26,7 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
                 const cloned = allocator.dupeZ(c_char, text) catch unreachable;
                 defer allocator.free(cloned);
                 const fontToUse: rl.Font = raylib_fonts[render_command.config.text_element_config.font_id].?;
-                rl.setTextLineSpacing(render_command.config.text_element_config.lineSpacing);
+                rl.setTextLineSpacing(render_command.config.text_element_config.line_spacing);
                 rl.drawTextEx(
                     fontToUse,
                     @ptrCast(@alignCast(cloned.ptr)),
@@ -190,7 +190,7 @@ pub fn measureText(clay_text: []const u8, config: *cl.TextElementConfig) cl.Dime
     const text: []const u8 = clay_text;
     const font_size: f32 = @floatFromInt(config.font_size);
     const letter_spacing: f32 = @floatFromInt(config.letter_spacing);
-    const line_spacing = config.lineSpacing;
+    const line_spacing = config.line_spacing;
 
     var temp_byte_counter: usize = 0;
     var byte_counter: usize = 0;
