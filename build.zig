@@ -14,7 +14,10 @@ pub fn build(b: *B) void {
 
         clay_lib.addIncludePath(b.path("./vendor/include/"));
         clay_lib.addCSourceFile(.{
-            .file = b.path("./vendor/source/clay.c"),
+            .file = b.addWriteFiles().add("clay.c",
+                \\#define CLAY_IMPLEMENTATION
+                \\#include<clay.h>
+            ),
         });
 
         break :blk clay_lib;
