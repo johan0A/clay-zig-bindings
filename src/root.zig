@@ -160,6 +160,7 @@ pub const SizingType = enum(EnumBackingType) {
     FIT,
     GROW,
     PERCENT,
+    FIXED,
 };
 
 pub const SizingConstraintsMinMax = extern struct {
@@ -221,10 +222,10 @@ pub const LayoutConfig = extern struct {
     padding: Padding = .{},
     /// gap between the children
     gap: u16 = 0,
-    /// direction of the children's layout
-    direction: LayoutDirection = .LEFT_TO_RIGHT,
     /// alignement of the children
     alignment: ChildAlignment = .{},
+    /// direction of the children's layout
+    direction: LayoutDirection = .LEFT_TO_RIGHT,
 };
 
 pub fn ClayArray(comptime T: type) type {
