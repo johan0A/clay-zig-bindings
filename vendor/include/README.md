@@ -1,1 +1,0 @@
-the clay.h in this folder has been very slightly modified for compatibility with zig cc

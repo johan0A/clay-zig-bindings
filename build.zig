@@ -12,7 +12,8 @@ pub fn build(b: *B) void {
             .optimize = optimize,
         });
 
-        clay_lib.addIncludePath(b.path("./vendor/include/"));
+        const clay_dep = b.dependency("clay", .{});
+        clay_lib.addIncludePath(clay_dep.path(""));
         clay_lib.addCSourceFile(.{
             .file = b.addWriteFiles().add("clay.c",
                 \\#define CLAY_IMPLEMENTATION

@@ -1,7 +1,12 @@
 .{
     .name = "zclay",
     .version = "0.0.0",
-    .dependencies = .{},
+    .dependencies = .{
+        .clay = .{
+            .url = "https://github.com/nicbarker/clay/archive/05eb12bed7c5b81d9480dff9dcf655648ea4b7ac.zip",
+            .hash = "1220b21e98bc80841ee4308195fcc9ec0839e189d7267762ece0a5013f789315de7e",
+        },
+    },
     .paths = .{
         "build.zig",
         "build.zig.zon",
