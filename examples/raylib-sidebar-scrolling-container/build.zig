@@ -76,18 +76,15 @@ fn addDependencies(
         .target = target,
         .optimize = optimize,
     });
-
     const raylib = raylib_dep.module("raylib");
-    const raylib_artifact = raylib_dep.artifact("raylib");
-
-    compile_step.linkLibrary(raylib_artifact);
     compile_step.root_module.addImport("raylib", raylib);
+    const raylib_artifact = raylib_dep.artifact("raylib");
+    compile_step.linkLibrary(raylib_artifact);
 
     const zclay_dep = b.dependency("zclay", .{
         .target = target,
         .optimize = optimize,
     });
-
     const zclay = zclay_dep.module("zclay");
     compile_step.root_module.addImport("zclay", zclay);
 }
