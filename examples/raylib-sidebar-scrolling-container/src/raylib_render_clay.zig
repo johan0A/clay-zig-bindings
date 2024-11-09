@@ -26,7 +26,7 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
                 const cloned = allocator.dupeZ(c_char, text) catch unreachable;
                 defer allocator.free(cloned);
                 const fontToUse: rl.Font = raylib_fonts[render_command.config.text_element_config.font_id].?;
-                rl.setTextLineSpacing(render_command.config.text_element_config.line_spacing);
+                rl.setTextLineSpacing(render_command.config.text_element_config.line_height);
                 rl.drawTextEx(
                     fontToUse,
                     @ptrCast(@alignCast(cloned.ptr)),
@@ -37,7 +37,7 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
                 );
             },
             .Image => {
-                const image_texture: *rl.Texture2D = @ptrCast(
+                const image_texture: *const rl.Texture2D = @ptrCast(
                     @alignCast(render_command.config.image_element_config.image_data),
                 );
                 rl.drawTextureEx(
@@ -190,7 +190,7 @@ pub fn measureText(clay_text: []const u8, config: *cl.TextElementConfig) cl.Dime
     const text: []const u8 = clay_text;
     const font_size: f32 = @floatFromInt(config.font_size);
     const letter_spacing: f32 = @floatFromInt(config.letter_spacing);
-    const line_spacing = config.line_spacing;
+    const line_height = config.line_height;
 
     var temp_byte_counter: usize = 0;
     var byte_counter: usize = 0;
@@ -217,7 +217,7 @@ pub fn measureText(clay_text: []const u8, config: *cl.TextElementConfig) cl.Dime
             if (temp_text_width < text_width) temp_text_width = text_width;
             byte_counter = 0;
             text_width = 0;
-            text_height += font_size + @as(f32, @floatFromInt(line_spacing));
+            text_height += font_size + @as(f32, @floatFromInt(line_height));
         }
 
         if (temp_byte_counter < byte_counter) temp_byte_counter = byte_counter;

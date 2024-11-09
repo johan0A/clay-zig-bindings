@@ -1,6 +1,42 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+/// for direct calls to the clay c library
+pub const cdefs = struct {
+    // TODO: should use @extern instead but zls does not yet support it well and that is more important
+    extern "c" fn Clay_MinMemorySize() u32;
+    extern "c" fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, offset: [*c]u8) Arena;
+    extern "c" fn Clay_SetPointerState(position: Vector2, pointer_down: bool) void;
+    extern "c" fn Clay_Initialize(arena: Arena, layout_dimensions: Dimensions) void;
+    extern "c" fn Clay_UpdateScrollContainers(is_pointer_active: bool, scroll_delta: Vector2, delta_time: f32) void;
+    extern "c" fn Clay_SetLayoutDimensions(dimensions: Dimensions) void;
+    extern "c" fn Clay_BeginLayout() void;
+    extern "c" fn Clay_EndLayout() ClayArray(RenderCommand);
+    extern "c" fn Clay_PointerOver(id: ElementId) bool;
+    extern "c" fn Clay_GetScrollContainerData(id: ElementId) ScrollContainerData;
+    extern "c" fn Clay_SetMeasureTextFunction(measureTextFunction: *const fn (*String, *TextElementConfig) callconv(.C) Dimensions) void;
+    extern "c" fn Clay_RenderCommandArray_Get(array: *ClayArray(RenderCommand), index: i32) *RenderCommand;
+    extern "c" fn Clay_SetDebugModeEnabled(enabled: bool) void;
+
+    extern "c" fn Clay__OpenElement() void;
+    extern "c" fn Clay__CloseElement() void;
+    extern "c" fn Clay__ElementPostConfiguration() void;
+    extern "c" fn Clay__OpenTextElement(text: String, textConfig: *TextElementConfig) void;
+    extern "c" fn Clay__AttachId(id: ElementId) void;
+    extern "c" fn Clay__AttachLayoutConfig(layoutConfig: *LayoutConfig) void;
+    extern "c" fn Clay__AttachElementConfig(config: *anyopaque, type: ElementConfigType) void;
+    extern "c" fn Clay__StoreLayoutConfig(config: LayoutConfig) *LayoutConfig;
+    extern "c" fn Clay__StoreRectangleElementConfig(config: RectangleElementConfig) *RectangleElementConfig;
+    extern "c" fn Clay__StoreTextElementConfig(config: TextElementConfig) *TextElementConfig;
+    extern "c" fn Clay__StoreImageElementConfig(config: ImageElementConfig) *ImageElementConfig;
+    extern "c" fn Clay__StoreFloatingElementConfig(config: FloatingElementConfig) *FloatingElementConfig;
+    extern "c" fn Clay__StoreCustomElementConfig(config: CustomElementConfig) *CustomElementConfig;
+    extern "c" fn Clay__StoreScrollElementConfig(config: ScrollElementConfig) *ScrollElementConfig;
+    extern "c" fn Clay__StoreBorderElementConfig(config: BorderElementConfig) *BorderElementConfig;
+    extern "c" fn Clay__HashString(toHash: String, index: u32, seed: u32) ElementId;
+    extern "c" fn Clay__GetOpenLayoutElementId() u32;
+};
+
 pub const String = extern struct {
     length: c_int,
     chars: [*c]c_char,
@@ -64,47 +100,10 @@ pub const RenderCommandType = enum(EnumBackingType) {
     Custom,
 };
 
-pub const RectangleElementConfig = extern struct {
-    color: Color = .{ 255, 255, 255, 255 },
-    corner_radius: CornerRadius = .{},
-};
-
 pub const TextWrapMode = enum(EnumBackingType) {
     Words,
     Newlines,
     None,
-};
-
-pub const TextElementConfig = extern struct {
-    color: Color = .{ 0, 0, 0, 255 },
-    font_id: u16 = 0,
-    font_size: u16 = 20,
-    letter_spacing: u16 = 0,
-    line_spacing: u16 = 0,
-    wrap_mode: TextWrapMode = .Newlines,
-};
-
-pub const ImageElementConfig = extern struct {
-    image_data: *anyopaque,
-    source_dimensions: Dimensions,
-};
-
-pub const CustomElementConfig = extern struct {
-    custom_data: *anyopaque,
-};
-
-pub const BorderElementConfig = extern struct {
-    left: BorderData,
-    right: BorderData,
-    top: BorderData,
-    bottom: BorderData,
-    between_children: BorderData,
-    corner_radius: CornerRadius,
-};
-
-pub const ScrollElementConfig = extern struct {
-    horizontal: bool,
-    vertical: bool,
 };
 
 pub const FloatingAttachPointType = enum(EnumBackingType) {
@@ -124,14 +123,6 @@ pub const FloatingAttachPoints = extern struct {
     parent: FloatingAttachPointType,
 };
 
-pub const FloatingElementConfig = extern struct {
-    offset: Vector2,
-    expand: Dimensions,
-    z_index: u16,
-    parent_id: u32,
-    attachment: FloatingAttachPoints,
-};
-
 pub const ElementConfigUnion = extern union {
     rectangle_element_config: *RectangleElementConfig,
     text_element_config: *TextElementConfig,
@@ -149,10 +140,13 @@ pub const RenderCommand = extern struct {
 };
 
 pub const ScrollContainerData = extern struct {
+    // Note: This is a pointer to the real internal scroll position, mutating it may cause a change in final layout.
+    // Intended for use with external functionality that modifies scroll position, such as scroll bars or auto scrolling.
     scroll_position: *Vector2,
     scroll_container_dimensions: Dimensions,
     content_dimensions: Dimensions,
     config: ScrollElementConfig,
+    // Indicates whether an actual scroll container matched the provided ID or if the default struct was returned.
     found: bool,
 };
 
@@ -174,8 +168,28 @@ pub const SizingConstraints = extern union {
 };
 
 pub const SizingAxis = extern struct {
+    // Note: `min` is used for CLAY_SIZING_PERCENT, slightly different to clay.h due to lack of C anonymous unions
     constraints: SizingConstraints = .{ .size_percent = 100 },
     type: SizingType = .FIT,
+
+    pub const grow = SizingAxis{ .type = .GROW, .constraints = .{ .size_minmax = .{ .min = 0, .max = 0 } } };
+    pub const fit = SizingAxis{ .type = .FIT, .constraints = .{ .size_minmax = .{ .min = 0, .max = 0 } } };
+
+    pub fn fGrow(size_minmax: SizingConstraintsMinMax) SizingAxis {
+        return .{ .type = .GROW, .constraints = .{ .size_minmax = size_minmax } };
+    }
+
+    pub fn fixed(size: f32) SizingAxis {
+        return .{ .type = .FIT, .constraints = .{ .size_minmax = .{ .max = size, .min = size } } };
+    }
+
+    pub fn percent(size_percent: f32) SizingAxis {
+        return .{ .type = .PERCENT, .constraints = .{ .size_percent = size_percent } };
+    }
+
+    pub fn fFit(size_minmax: SizingConstraintsMinMax) SizingAxis {
+        return .{ .type = SizingType.FIT, .constraints = .{ .size_minmax = size_minmax } };
+    }
 };
 
 pub const Sizing = extern struct {
@@ -183,16 +197,25 @@ pub const Sizing = extern struct {
     w: SizingAxis = .{},
     /// height
     h: SizingAxis = .{},
+
+    pub const grow = Sizing{ .h = .grow, .w = .grow };
 };
 
 pub const Padding = extern struct {
     x: u16 = 0,
     y: u16 = 0,
+
+    pub fn uniform(size: u16) Padding {
+        return Padding{
+            .x = size,
+            .y = size,
+        };
+    }
 };
 
 pub const LayoutDirection = enum(EnumBackingType) {
-    LEFT_TO_RIGHT,
-    TOP_TO_BOTTOM,
+    LEFT_TO_RIGHT = 0,
+    TOP_TO_BOTTOM = 1,
 };
 
 pub const LayoutAlignmentX = enum(EnumBackingType) {
@@ -232,90 +255,149 @@ pub fn ClayArray(comptime T: type) type {
     return extern struct {
         capacity: u32,
         length: u32,
-        internal_array: [*c]T,
+        internal_array: [*]T,
     };
 }
 
-/// for direct calls to the clay c library
-pub const extern_functions = struct {
-    // TODO: should use @extern instead but zls does not yet support it well and that is more important
-    extern "c" fn Clay_MinMemorySize() u32;
-    extern "c" fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, offset: [*c]u8) Arena;
-    extern "c" fn Clay_SetPointerState(position: Vector2, pointer_down: bool) void;
-    extern "c" fn Clay_Initialize(arena: Arena, layout_dimensions: Dimensions) void;
-    extern "c" fn Clay_UpdateScrollContainers(is_pointer_active: bool, scroll_delta: Vector2, delta_time: f32) void;
-    extern "c" fn Clay_SetLayoutDimensions(dimensions: Dimensions) void;
-    extern "c" fn Clay_BeginLayout() void;
-    extern "c" fn Clay_EndLayout() ClayArray(RenderCommand);
-    extern "c" fn Clay_PointerOver(id: ElementId) bool;
-    extern "c" fn Clay_GetScrollContainerData(id: ElementId) ScrollContainerData;
-    extern "c" fn Clay_SetMeasureTextFunction(measureTextFunction: *const fn (*String, *TextElementConfig) callconv(.C) Dimensions) void;
-    extern "c" fn Clay_RenderCommandArray_Get(array: *ClayArray(RenderCommand), index: i32) *RenderCommand;
-    extern "c" fn Clay_SetDebugModeEnabled(enabled: bool) void;
-
-    extern "c" fn Clay__OpenContainerElement(id: ElementId, layout_config: *LayoutConfig) void;
-    extern "c" fn Clay__OpenRectangleElement(id: ElementId, layout_config: *LayoutConfig, rectangle_config: *RectangleElementConfig) void;
-    extern "c" fn Clay__OpenTextElement(id: ElementId, text: String, text_config: *TextElementConfig) void;
-    extern "c" fn Clay__OpenImageElement(id: ElementId, layout_config: *LayoutConfig, image_config: *ImageElementConfig) void;
-    extern "c" fn Clay__OpenScrollElement(id: ElementId, layout_config: *LayoutConfig, scroll_config: *ScrollElementConfig) void;
-    extern "c" fn Clay__OpenFloatingElement(id: ElementId, layout_config: *LayoutConfig, floating_config: *FloatingElementConfig) void;
-    extern "c" fn Clay__OpenBorderElement(id: ElementId, layout_config: *LayoutConfig, border_config: *BorderElementConfig) void;
-    extern "c" fn Clay__OpenCustomElement(id: ElementId, layout_config: *LayoutConfig, custom_config: *CustomElementConfig) void;
-    extern "c" fn Clay__CloseElementWithChildren() void;
-    extern "c" fn Clay__CloseScrollElement() void;
-    extern "c" fn Clay__CloseFloatingElement() void;
-    extern "c" fn Clay__StoreLayoutConfig(config: LayoutConfig) *LayoutConfig;
-    extern "c" fn Clay__StoreRectangleElementConfig(config: RectangleElementConfig) *RectangleElementConfig;
-    extern "c" fn Clay__StoreTextElementConfig(config: TextElementConfig) *TextElementConfig;
-    extern "c" fn Clay__StoreImageElementConfig(config: ImageElementConfig) *ImageElementConfig;
-    extern "c" fn Clay__StoreFloatingElementConfig(config: FloatingElementConfig) *FloatingElementConfig;
-    extern "c" fn Clay__StoreCustomElementConfig(config: CustomElementConfig) *CustomElementConfig;
-    extern "c" fn Clay__StoreScrollElementConfig(config: ScrollElementConfig) *ScrollElementConfig;
-    extern "c" fn Clay__StoreBorderElementConfig(config: BorderElementConfig) *BorderElementConfig;
-    extern "c" fn Clay__HashString(to_hash: String, index: u32) ElementId;
+pub const RectangleElementConfig = extern struct {
+    color: Color = .{ 255, 255, 255, 255 },
+    corner_radius: CornerRadius = .{},
 };
 
-pub const minMemorySize = extern_functions.Clay_MinMemorySize;
-pub const createArenaWithCapacityAndMemory = extern_functions.Clay_CreateArenaWithCapacityAndMemory;
-pub const initialize = extern_functions.Clay_Initialize;
-pub const setLayoutDimensions = extern_functions.Clay_SetLayoutDimensions;
-pub const beginLayout = extern_functions.Clay_BeginLayout;
-pub const endLayout = extern_functions.Clay_EndLayout;
-pub const pointerOver = extern_functions.Clay_PointerOver;
-pub const getScrollContainerData = extern_functions.Clay_GetScrollContainerData;
-pub const renderCommandArrayGet = extern_functions.Clay_RenderCommandArray_Get;
-pub const setDebugModeEnabled = extern_functions.Clay_SetDebugModeEnabled;
+pub const BorderElementConfig = extern struct {
+    left: BorderData,
+    right: BorderData,
+    top: BorderData,
+    bottom: BorderData,
+    between_children: BorderData,
+    corner_radius: CornerRadius,
+};
 
-pub const container = extern_functions.Clay__OpenContainerElement;
-pub const rectangle = extern_functions.Clay__OpenRectangleElement;
-pub const image = extern_functions.Clay__OpenImageElement;
-pub const scroll = extern_functions.Clay__OpenScrollElement;
-pub const floating = extern_functions.Clay__OpenFloatingElement;
-pub const border = extern_functions.Clay__OpenBorderElement;
-pub const customElement = extern_functions.Clay__OpenCustomElement;
-pub const closeParent = extern_functions.Clay__CloseElementWithChildren;
-pub const closeScroll = extern_functions.Clay__CloseScrollElement;
-pub const closeFloating = extern_functions.Clay__CloseFloatingElement;
-pub const layout = extern_functions.Clay__StoreLayoutConfig;
-pub const rectangleConfig = extern_functions.Clay__StoreRectangleElementConfig;
-pub const textConfig = extern_functions.Clay__StoreTextElementConfig;
-pub const imageConfig = extern_functions.Clay__StoreImageElementConfig;
-pub const floatingConfig = extern_functions.Clay__StoreFloatingElementConfig;
-pub const customConfig = extern_functions.Clay__StoreCustomElementConfig;
-pub const scrollConfig = extern_functions.Clay__StoreScrollElementConfig;
-pub const borderConfig = extern_functions.Clay__StoreBorderElementConfig;
-pub const hashString = extern_functions.Clay__HashString;
+pub const TextElementConfig = extern struct {
+    color: Color = .{ 0, 0, 0, 255 },
+    font_id: u16 = 0,
+    font_size: u16 = 20,
+    letter_spacing: u16 = 0,
+    line_height: u16 = 0,
+    wrap_mode: TextWrapMode = .Newlines,
+};
+
+pub const ImageElementConfig = extern struct {
+    image_data: *const anyopaque,
+    source_dimensions: Dimensions,
+};
+
+pub const FloatingElementConfig = extern struct {
+    offset: Vector2,
+    expand: Dimensions,
+    z_index: u16,
+    parent_id: u32,
+    attachment: FloatingAttachPoints,
+};
+
+pub const CustomElementConfig = extern struct {
+    custom_data: *anyopaque,
+};
+
+pub const ScrollElementConfig = extern struct {
+    horizontal: bool,
+    vertical: bool,
+};
+
+pub const ElementConfigType = enum(EnumBackingType) {
+    Rectangle = 1,
+    Border = 2,
+    Floating = 4,
+    Scroll = 8,
+    Image = 16,
+    Text = 32,
+    Custom = 64,
+    // zig specific enum types
+    id,
+    Layout,
+};
+
+pub const Config = union(ElementConfigType) {
+    Rectangle: *RectangleElementConfig,
+    Border: *BorderElementConfig,
+    Floating: *FloatingElementConfig,
+    Scroll: *ScrollElementConfig,
+    Image: *ImageElementConfig,
+    Text: *TextElementConfig,
+    Custom: *CustomElementConfig,
+    id: ElementId,
+    Layout: *LayoutConfig,
+
+    pub fn layout(config: LayoutConfig) Config {
+        return Config{ .Layout = cdefs.Clay__StoreLayoutConfig(config) };
+    }
+    pub fn rectangle(config: RectangleElementConfig) Config {
+        return Config{ .Rectangle = cdefs.Clay__StoreRectangleElementConfig(config) };
+    }
+    pub fn text(config: TextElementConfig) Config {
+        return Config{ .Text = cdefs.Clay__StoreTextElementConfig(config) };
+    }
+    pub fn image(config: ImageElementConfig) Config {
+        return Config{ .Image = cdefs.Clay__StoreImageElementConfig(config) };
+    }
+    pub fn floating(config: FloatingElementConfig) Config {
+        return Config{ .Floating = cdefs.Clay__StoreFloatingElementConfig(config) };
+    }
+    pub fn custom(config: CustomElementConfig) Config {
+        return Config{ .Custom = cdefs.Clay__StoreCustomElementConfig(config) };
+    }
+    pub fn scroll(config: ScrollElementConfig) Config {
+        return Config{ .Scroll = cdefs.Clay__StoreScrollElementConfig(config) };
+    }
+    pub fn border(config: BorderElementConfig) Config {
+        return Config{ .Border = cdefs.Clay__StoreBorderElementConfig(config) };
+    }
+    pub fn ID(string: []const u8) Config {
+        return Config{ .id = hashString(makeClayString(string), 0, 0) };
+    }
+    pub fn IDI(string: []const u8, index: u32) Config {
+        return Config{ .id = hashString(makeClayString(string), index, 0) };
+    }
+};
+
+pub const minMemorySize = cdefs.Clay_MinMemorySize;
+pub const createArenaWithCapacityAndMemory = cdefs.Clay_CreateArenaWithCapacityAndMemory;
+pub const initialize = cdefs.Clay_Initialize;
+pub const setLayoutDimensions = cdefs.Clay_SetLayoutDimensions;
+pub const beginLayout = cdefs.Clay_BeginLayout;
+pub const endLayout = cdefs.Clay_EndLayout;
+pub const pointerOver = cdefs.Clay_PointerOver;
+pub const getScrollContainerData = cdefs.Clay_GetScrollContainerData;
+pub const renderCommandArrayGet = cdefs.Clay_RenderCommandArray_Get;
+pub const setDebugModeEnabled = cdefs.Clay_SetDebugModeEnabled;
+pub const hashString = cdefs.Clay__HashString;
+
+pub fn UI(configs: []const Config) void {
+    cdefs.Clay__OpenElement();
+    for (configs) |config| {
+        switch (config) {
+            .Layout => |layoutConf| cdefs.Clay__AttachLayoutConfig(layoutConf),
+            .id => |id| cdefs.Clay__AttachId(id),
+            inline else => |elem_config| cdefs.Clay__AttachElementConfig(@ptrCast(elem_config), config),
+        }
+    }
+    cdefs.Clay__ElementPostConfiguration();
+}
+
+pub fn CLOSE() void {
+    cdefs.Clay__CloseElement();
+}
 
 pub fn setPointerState(position: Vector2, pointer_down: bool) void {
-    extern_functions.Clay_SetPointerState(position, pointer_down);
+    cdefs.Clay_SetPointerState(position, pointer_down);
 }
 
 pub fn updateScrollContainers(is_pointer_active: bool, scroll_delta: Vector2, delta_time: f32) void {
-    extern_functions.Clay_UpdateScrollContainers(is_pointer_active, scroll_delta, delta_time);
+    cdefs.Clay_UpdateScrollContainers(is_pointer_active, scroll_delta, delta_time);
 }
 
 pub fn setMeasureTextFunction(comptime measureTextFunction: fn ([]const u8, *TextElementConfig) Dimensions) void {
-    extern_functions.Clay_SetMeasureTextFunction(struct {
+    cdefs.Clay_SetMeasureTextFunction(struct {
         pub fn f(string: *String, config: *TextElementConfig) callconv(.C) Dimensions {
             return measureTextFunction(@ptrCast(string.chars[0..@intCast(string.length)]), config);
         }
@@ -329,30 +411,6 @@ pub fn makeClayString(string: []const u8) String {
     };
 }
 
-pub fn text(id: ElementId, string: []const u8, config: *TextElementConfig) void {
-    extern_functions.Clay__OpenTextElement(id, makeClayString(string), config);
-}
-
-pub fn ID(string: []const u8) ElementId {
-    return hashString(makeClayString(string), 0);
-}
-
-pub fn IDI(string: []const u8, index: u32) ElementId {
-    return hashString(makeClayString(string), index);
-}
-
-pub fn sizingGrow(size_minmax: SizingConstraintsMinMax) SizingAxis {
-    return .{ .type = .GROW, .constraints = .{ .size_minmax = size_minmax } };
-}
-
-pub fn sizingFixed(size: f32) SizingAxis {
-    return .{ .type = .FIT, .constraints = .{ .size_minmax = .{ .max = size, .min = size } } };
-}
-
-pub fn sizingPercent(size_percent: f32) SizingAxis {
-    return .{ .type = .PERCENT, .constraints = .{ .size_percent = size_percent } };
-}
-
-pub fn sizingFit(size_minmax: SizingConstraintsMinMax) SizingAxis {
-    return .{ .type = SizingType.FIT, .constraints = .{ .size_minmax = size_minmax } };
+pub fn text(string: []const u8, config: Config) void {
+    cdefs.Clay__OpenTextElement(makeClayString(string), config.Text);
 }
