@@ -12,7 +12,6 @@ pub fn build(b: *B) void {
             .target = target,
             .optimize = optimize,
         });
-
         addDependencies(exe, b, target, optimize);
 
         b.installArtifact(exe);
@@ -33,7 +32,6 @@ pub fn build(b: *B) void {
             .target = target,
             .optimize = optimize,
         });
-
         addDependencies(exe_unit_tests, b, target, optimize);
 
         const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
@@ -48,7 +46,6 @@ pub fn build(b: *B) void {
             .target = target,
             .optimize = optimize,
         });
-
         addDependencies(exe_check, b, target, optimize);
 
         const tests_check = b.addTest(.{
@@ -57,7 +54,6 @@ pub fn build(b: *B) void {
             .target = target,
             .optimize = optimize,
         });
-
         addDependencies(tests_check, b, target, optimize);
 
         const check = b.step("check", "Check if exe and tests compile");
@@ -72,6 +68,13 @@ fn addDependencies(
     target: B.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
 ) void {
+    const zclay_dep = b.dependency("zclay", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    const zclay = zclay_dep.module("zclay");
+    compile_step.root_module.addImport("zclay", zclay);
+
     const raylib_dep = b.dependency("raylib-zig", .{
         .target = target,
         .optimize = optimize,
@@ -80,11 +83,4 @@ fn addDependencies(
     compile_step.root_module.addImport("raylib", raylib);
     const raylib_artifact = raylib_dep.artifact("raylib");
     compile_step.linkLibrary(raylib_artifact);
-
-    const zclay_dep = b.dependency("zclay", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    const zclay = zclay_dep.module("zclay");
-    compile_step.root_module.addImport("zclay", zclay);
 }

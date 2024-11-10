@@ -13,6 +13,7 @@ pub const cdefs = struct {
     extern "c" fn Clay_BeginLayout() void;
     extern "c" fn Clay_EndLayout() ClayArray(RenderCommand);
     extern "c" fn Clay_PointerOver(id: ElementId) bool;
+    extern "c" fn Clay_GetElementId(id: String) ElementId;
     extern "c" fn Clay_GetScrollContainerData(id: ElementId) ScrollContainerData;
     extern "c" fn Clay_SetMeasureTextFunction(measureTextFunction: *const fn (*String, *TextElementConfig) callconv(.C) Dimensions) void;
     extern "c" fn Clay_RenderCommandArray_Get(array: *ClayArray(RenderCommand), index: i32) *RenderCommand;
@@ -73,11 +74,20 @@ pub const CornerRadius = extern struct {
     top_right: f32 = 0,
     bottom_left: f32 = 0,
     bottom_right: f32 = 0,
+
+    pub fn all(radius: f32) CornerRadius {
+        return .{
+            .top_left = radius,
+            .top_right = radius,
+            .bottom_left = radius,
+            .bottom_right = radius,
+        };
+    }
 };
 
 pub const BorderData = extern struct {
     width: u32 = 0,
-    color: Color = .{ 255, 255, 255, 255 },
+    color: Color = .{ 0, 0, 0, 0 },
 };
 
 pub const ElementId = extern struct {
@@ -169,7 +179,7 @@ pub const SizingConstraints = extern union {
 
 pub const SizingAxis = extern struct {
     // Note: `min` is used for CLAY_SIZING_PERCENT, slightly different to clay.h due to lack of C anonymous unions
-    constraints: SizingConstraints = .{ .size_percent = 100 },
+    constraints: SizingConstraints = .{ .size_minmax = .{} },
     type: SizingType = .FIT,
 
     pub const grow = SizingAxis{ .type = .GROW, .constraints = .{ .size_minmax = .{ .min = 0, .max = 0 } } };
@@ -231,16 +241,22 @@ pub const LayoutAlignmentY = enum(EnumBackingType) {
 };
 
 pub const ChildAlignment = extern struct {
-    x: LayoutAlignmentX = .CENTER,
-    y: LayoutAlignmentY = .CENTER,
+    x: LayoutAlignmentX = .LEFT,
+    y: LayoutAlignmentY = .TOP,
+    pub const top_center = ChildAlignment{ .x = .CENTER, .y = .TOP };
+    pub const bottom_center = ChildAlignment{ .x = .LEFT, .y = .BOTTOM };
+    pub const top_left = ChildAlignment{ .x = .LEFT, .y = .TOP };
+    pub const top_right = ChildAlignment{ .x = .RIGHT, .y = .TOP };
+    pub const bottom_right = ChildAlignment{ .x = .RIGHT, .y = .BOTTOM };
+    pub const bottom_left = ChildAlignment{ .x = .LEFT, .y = .BOTTOM };
+    pub const center_left = ChildAlignment{ .x = .LEFT, .y = .CENTER };
+    pub const center_right = ChildAlignment{ .x = .RIGHT, .y = .CENTER };
+    pub const centered = ChildAlignment{ .x = .CENTER, .y = .CENTER };
 };
 
 pub const LayoutConfig = extern struct {
     /// sizing of the element
-    size: Sizing = .{
-        .h = .{ .constraints = .{ .size_percent = 100 }, .type = .GROW },
-        .w = .{ .constraints = .{ .size_percent = 100 }, .type = .GROW },
-    },
+    size: Sizing = .{},
     /// padding arround children
     padding: Padding = .{},
     /// gap between the children
@@ -265,12 +281,36 @@ pub const RectangleElementConfig = extern struct {
 };
 
 pub const BorderElementConfig = extern struct {
-    left: BorderData,
-    right: BorderData,
-    top: BorderData,
-    bottom: BorderData,
-    between_children: BorderData,
-    corner_radius: CornerRadius,
+    left: BorderData = .{},
+    right: BorderData = .{},
+    top: BorderData = .{},
+    bottom: BorderData = .{},
+    between_children: BorderData = .{},
+    corner_radius: CornerRadius = .{},
+
+    pub fn outside(color: Color, width: u32, radius: f32) BorderElementConfig {
+        const data = BorderData{ .color = color, .width = width };
+        return BorderElementConfig{
+            .left = data,
+            .right = data,
+            .top = data,
+            .bottom = data,
+            .between_children = .{},
+            .corner_radius = .all(radius),
+        };
+    }
+
+    pub fn all(color: Color, width: u32, radius: f32) BorderElementConfig {
+        const data = BorderData{ .color = color, .width = width };
+        return BorderElementConfig{
+            .left = data,
+            .right = data,
+            .top = data,
+            .bottom = data,
+            .between_children = data,
+            .corner_radius = .{ radius, radius, radius, radius },
+        };
+    }
 };
 
 pub const TextElementConfig = extern struct {
@@ -279,7 +319,7 @@ pub const TextElementConfig = extern struct {
     font_size: u16 = 20,
     letter_spacing: u16 = 0,
     line_height: u16 = 0,
-    wrap_mode: TextWrapMode = .Newlines,
+    wrap_mode: TextWrapMode = .Words,
 };
 
 pub const ImageElementConfig = extern struct {
@@ -300,8 +340,8 @@ pub const CustomElementConfig = extern struct {
 };
 
 pub const ScrollElementConfig = extern struct {
-    horizontal: bool,
-    vertical: bool,
+    horizontal: bool = false,
+    vertical: bool = false,
 };
 
 pub const ElementConfigType = enum(EnumBackingType) {
@@ -413,4 +453,16 @@ pub fn makeClayString(string: []const u8) String {
 
 pub fn text(string: []const u8, config: Config) void {
     cdefs.Clay__OpenTextElement(makeClayString(string), config.Text);
+}
+
+pub fn ID(string: []const u8) ElementId {
+    return hashString(makeClayString(string), 0, 0);
+}
+
+pub fn IDI(string: []const u8, index: u32) ElementId {
+    return hashString(makeClayString(string), index, 0);
+}
+
+pub fn getElementId(string: []const u8) ElementId {
+    return cdefs.Clay_GetElementId(makeClayString(string));
 }

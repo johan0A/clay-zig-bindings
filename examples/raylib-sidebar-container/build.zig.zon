@@ -1,0 +1,20 @@
+.{
+    .name = "zig-exe-template",
+    .version = "0.0.0",
+    .dependencies = .{
+        .zclay = .{
+            .path = "../../",
+        },
+        .@"raylib-zig" = .{
+            .url = "https://github.com/Not-Nik/raylib-zig/archive/90109ff8041229ae8b615dca362f646586f20bd3.tar.gz",
+            .hash = "122062d2421175ba6bf89382c86621270e4883f1074ee4cc09da282e231bdef57328",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "LICENSE",
+        "README.md",
+    },
+}

@@ -35,7 +35,7 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
                 .direction = .TOP_TO_BOTTOM,
                 .size = .{ .h = .grow, .w = .fixed(300) },
                 .padding = .uniform(16),
-                .alignment = .{ .x = .CENTER, .y = .TOP },
+                .alignment = .top_center,
                 .gap = 16,
             }),
             .rectangle(.{ .color = light_grey }),
@@ -44,7 +44,7 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
             defer cl.CLOSE();
             cl.UI(&.{
                 .ID("ProfilePictureOuter"),
-                .layout(.{ .size = .{ .w = .grow }, .padding = .uniform(16), .alignment = .{ .y = .CENTER }, .gap = 16 }),
+                .layout(.{ .size = .{ .w = .grow }, .padding = .uniform(16), .alignment = .center_left, .gap = 16 }),
                 .rectangle(.{ .color = red }),
             });
             {
@@ -98,7 +98,7 @@ pub fn main() anyerror!void {
     rl.setTargetFPS(60);
 
     // load assets
-    loadFont(@embedFile("./resources/Roboto-Regular.ttf"), 0, 100);
+    loadFont(@embedFile("./resources/Roboto-Regular.ttf"), 0, 24);
     const profile_picture = rl.loadTextureFromImage(rl.loadImageFromMemory(".png", @embedFile("./resources/profile-picture.png")));
 
     var debug_mode_enabled = false;
