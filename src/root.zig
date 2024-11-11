@@ -185,20 +185,20 @@ pub const SizingAxis = extern struct {
     pub const grow = SizingAxis{ .type = .GROW, .constraints = .{ .size_minmax = .{ .min = 0, .max = 0 } } };
     pub const fit = SizingAxis{ .type = .FIT, .constraints = .{ .size_minmax = .{ .min = 0, .max = 0 } } };
 
-    pub fn fGrow(size_minmax: SizingConstraintsMinMax) SizingAxis {
+    pub fn growMinMax(size_minmax: SizingConstraintsMinMax) SizingAxis {
         return .{ .type = .GROW, .constraints = .{ .size_minmax = size_minmax } };
     }
 
+    pub fn fitMinMax(size_minmax: SizingConstraintsMinMax) SizingAxis {
+        return .{ .type = .FIT, .constraints = .{ .size_minmax = size_minmax } };
+    }
+
     pub fn fixed(size: f32) SizingAxis {
-        return .{ .type = .FIT, .constraints = .{ .size_minmax = .{ .max = size, .min = size } } };
+        return .{ .type = .FIXED, .constraints = .{ .size_minmax = .{ .max = size, .min = size } } };
     }
 
     pub fn percent(size_percent: f32) SizingAxis {
         return .{ .type = .PERCENT, .constraints = .{ .size_percent = size_percent } };
-    }
-
-    pub fn fFit(size_minmax: SizingConstraintsMinMax) SizingAxis {
-        return .{ .type = SizingType.FIT, .constraints = .{ .size_minmax = size_minmax } };
     }
 };
 
@@ -215,7 +215,7 @@ pub const Padding = extern struct {
     x: u16 = 0,
     y: u16 = 0,
 
-    pub fn uniform(size: u16) Padding {
+    pub fn all(size: u16) Padding {
         return Padding{
             .x = size,
             .y = size,
@@ -243,20 +243,13 @@ pub const LayoutAlignmentY = enum(EnumBackingType) {
 pub const ChildAlignment = extern struct {
     x: LayoutAlignmentX = .LEFT,
     y: LayoutAlignmentY = .TOP,
-    pub const top_center = ChildAlignment{ .x = .CENTER, .y = .TOP };
-    pub const bottom_center = ChildAlignment{ .x = .LEFT, .y = .BOTTOM };
-    pub const top_left = ChildAlignment{ .x = .LEFT, .y = .TOP };
-    pub const top_right = ChildAlignment{ .x = .RIGHT, .y = .TOP };
-    pub const bottom_right = ChildAlignment{ .x = .RIGHT, .y = .BOTTOM };
-    pub const bottom_left = ChildAlignment{ .x = .LEFT, .y = .BOTTOM };
-    pub const center_left = ChildAlignment{ .x = .LEFT, .y = .CENTER };
-    pub const center_right = ChildAlignment{ .x = .RIGHT, .y = .CENTER };
-    pub const centered = ChildAlignment{ .x = .CENTER, .y = .CENTER };
+
+    pub const CENTER = ChildAlignment{ .x = .CENTER, .y = .CENTER };
 };
 
 pub const LayoutConfig = extern struct {
     /// sizing of the element
-    size: Sizing = .{},
+    sizing: Sizing = .{},
     /// padding arround children
     padding: Padding = .{},
     /// gap between the children
@@ -308,7 +301,7 @@ pub const BorderElementConfig = extern struct {
             .top = data,
             .bottom = data,
             .between_children = data,
-            .corner_radius = .{ radius, radius, radius, radius },
+            .corner_radius = .all(radius),
         };
     }
 };

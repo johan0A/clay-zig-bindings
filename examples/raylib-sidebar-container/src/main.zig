@@ -8,7 +8,7 @@ const red: cl.Color = .{ 168, 66, 28, 255 };
 const orange: cl.Color = .{ 225, 138, 50, 255 };
 const white: cl.Color = .{ 250, 250, 255, 255 };
 
-const sidebar_item_layout: cl.LayoutConfig = .{ .size = .{ .w = .grow, .h = .fixed(50) } };
+const sidebar_item_layout: cl.LayoutConfig = .{ .sizing = .{ .w = .grow, .h = .fixed(50) } };
 
 fn sidebarItemCompoment(index: usize) void {
     cl.UI(&.{
@@ -24,7 +24,7 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
     {
         cl.UI(&.{
             .ID("OuterContainer"),
-            .layout(.{ .direction = .LEFT_TO_RIGHT, .size = .grow, .padding = .uniform(16), .gap = 16 }),
+            .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .gap = 16 }),
             .rectangle(.{ .color = white }),
         });
         defer cl.CLOSE();
@@ -33,9 +33,9 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
             .ID("SideBar"),
             .layout(.{
                 .direction = .TOP_TO_BOTTOM,
-                .size = .{ .h = .grow, .w = .fixed(300) },
-                .padding = .uniform(16),
-                .alignment = .top_center,
+                .sizing = .{ .h = .grow, .w = .fixed(300) },
+                .padding = .all(16),
+                .alignment = .{ .x = .CENTER, .y = .TOP },
                 .gap = 16,
             }),
             .rectangle(.{ .color = light_grey }),
@@ -44,14 +44,14 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
             defer cl.CLOSE();
             cl.UI(&.{
                 .ID("ProfilePictureOuter"),
-                .layout(.{ .size = .{ .w = .grow }, .padding = .uniform(16), .alignment = .center_left, .gap = 16 }),
+                .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .alignment = .{ .x = .LEFT, .y = .CENTER }, .gap = 16 }),
                 .rectangle(.{ .color = red }),
             });
             {
                 defer cl.CLOSE();
                 cl.UI(&.{
                     .ID("ProfilePicture"),
-                    .layout(.{ .size = .{ .h = .fixed(60), .w = .fixed(60) } }),
+                    .layout(.{ .sizing = .{ .h = .fixed(60), .w = .fixed(60) } }),
                     .image(.{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(profile_picture) }),
                 });
                 cl.CLOSE();
@@ -63,7 +63,7 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
 
         cl.UI(&.{
             .ID("MainContent"),
-            .layout(.{ .size = .grow }),
+            .layout(.{ .sizing = .grow }),
             .rectangle(.{ .color = light_grey }),
         });
         cl.CLOSE();
@@ -88,6 +88,7 @@ pub fn main() anyerror!void {
     cl.setMeasureTextFunction(renderer.measureText);
 
     // init raylib
+    rl.setTraceLogLevel(.log_error);
     rl.setConfigFlags(.{
         .msaa_4x_hint = true,
         .vsync_hint = true,
@@ -113,6 +114,13 @@ pub fn main() anyerror!void {
             .x = mouse_pos.x,
             .y = mouse_pos.y,
         }, rl.isMouseButtonDown(.mouse_button_left));
+
+        const scroll_delta = rl.getMouseWheelMoveV().multiply(.{ .x = 6, .y = 6 });
+        cl.updateScrollContainers(
+            false,
+            .{ .x = scroll_delta.x, .y = scroll_delta.y },
+            rl.getFrameTime(),
+        );
 
         cl.setLayoutDimensions(.{
             .w = @floatFromInt(rl.getScreenWidth()),

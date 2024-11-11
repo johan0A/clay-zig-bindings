@@ -25,7 +25,6 @@ const COLOR_LIGHT = cl.Color{ 244, 235, 230, 255 };
 const COLOR_LIGHT_HOVER = cl.Color{ 224, 215, 210, 255 };
 const COLOR_BUTTON_HOVER = cl.Color{ 238, 227, 225, 255 };
 const COLOR_BROWN = cl.Color{ 61, 26, 5, 255 };
-//COLOR_R= :: cl.Color {252, 67, 27, 255};
 const COLOR_RED = cl.Color{ 168, 66, 28, 255 };
 const COLOR_RED_HOVER = cl.Color{ 148, 46, 8, 255 };
 const COLOR_ORANGE = cl.Color{ 225, 138, 50, 255 };
@@ -53,21 +52,21 @@ const border_data = cl.BorderData{ .width = 2, .color = COLOR_RED };
 var window_height: isize = 0;
 var window_width: isize = 0;
 
-fn LandingPageBlob(index: u32, fontSize: u16, fontId: u16, color: cl.Color, text: []const u8, image: *rl.Texture2D) void {
+fn LandingPageBlob(index: u32, font_size: u16, font_id: u16, color: cl.Color, text: []const u8, image: *rl.Texture2D) void {
     cl.UI(&.{
         .IDI("HeroBlob", index),
-        .layout(.{ .size = .{ .w = .fGrow(.{ .max = 480 }) }, .padding = .uniform(16), .gap = 16, .alignment = .{ .y = .CENTER } }),
+        .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 480 }) }, .padding = .all(16), .gap = 16, .alignment = .{ .y = .CENTER } }),
         .border(.outside(color, 2, 10)),
     });
     {
         defer cl.CLOSE();
         cl.UI(&.{
             .IDI("CheckImage", index),
-            .layout(.{ .size = .{ .w = .fixed(32) } }),
+            .layout(.{ .sizing = .{ .w = .fixed(32) } }),
             .image(.{ .image_data = image, .source_dimensions = .{ .w = 128, .h = 128 } }),
         });
         cl.CLOSE();
-        cl.text(text, cl.Config.text(.{ .font_size = fontSize, .font_id = fontId, .color = color }));
+        cl.text(text, cl.Config.text(.{ .font_size = font_size, .font_id = font_id, .color = color }));
     }
 }
 
@@ -75,7 +74,7 @@ fn landingPageDesktop() void {
     cl.UI(&.{
         .ID("LandingPage1Desktop"),
         .layout(.{
-            .size = .{ .w = .grow, .h = .fFit(.{ .min = @floatFromInt(window_height - 70) }) },
+            .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 70) }) },
             .alignment = .{ .y = .CENTER },
             .padding = .{ .x = 50 },
             .gap = 16,
@@ -85,14 +84,14 @@ fn landingPageDesktop() void {
         defer cl.CLOSE();
         cl.UI(&.{
             .ID("LandingPage1"),
-            .layout(.{ .size = .grow, .alignment = .{ .y = .CENTER }, .padding = .uniform(32), .gap = 32 }),
+            .layout(.{ .sizing = .grow, .alignment = .{ .y = .CENTER }, .padding = .all(32), .gap = 32 }),
             .border(.{ .left = border_data, .right = border_data }),
         });
         {
             defer cl.CLOSE();
             cl.UI(&.{
                 .ID("LeftText"),
-                .layout(.{ .size = .{ .w = .percent(0.55) }, .direction = .TOP_TO_BOTTOM, .gap = 8 }),
+                .layout(.{ .sizing = .{ .w = .percent(0.55) }, .direction = .TOP_TO_BOTTOM, .gap = 8 }),
             });
             {
                 defer cl.CLOSE();
@@ -100,17 +99,17 @@ fn landingPageDesktop() void {
                     "Clay is a flex-box style UI auto layout library in C, with declarative syntax and microsecond performance.",
                     cl.Config.text(.{ .font_size = 56, .font_id = FONT_ID_TITLE_56, .color = COLOR_RED }),
                 );
-                cl.UI(&.{ .ID("Spacer"), .layout(.{ .size = .{ .w = .grow, .h = .fixed(32) } }) });
+                cl.UI(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .grow, .h = .fixed(32) } }) });
                 cl.CLOSE();
                 cl.text(
-                    "Clay is laying out this webpage right now!",
+                    "Clay is laying out this webpage .right now!",
                     cl.Config.text(.{ .font_size = 36, .font_id = FONT_ID_BODY_36, .color = COLOR_ORANGE }),
                 );
             }
 
             cl.UI(&.{
                 .ID("HeroImageOuter"),
-                .layout(.{ .size = .{ .w = .percent(0.45) }, .direction = .TOP_TO_BOTTOM, .alignment = .{ .x = .CENTER }, .gap = 16 }),
+                .layout(.{ .sizing = .{ .w = .percent(0.45) }, .direction = .TOP_TO_BOTTOM, .alignment = .{ .x = .CENTER }, .gap = 16 }),
             });
             {
                 defer cl.CLOSE();
@@ -124,23 +123,391 @@ fn landingPageDesktop() void {
     }
 }
 
-const ScrollbarData = struct {
-    clickOrigin: cl.Vector2,
-    positionOrigin: cl.Vector2,
-    mouseDown: bool,
-};
+fn landingPageMobile() void {
+    cl.UI(&.{
+        .ID("LandingPage1Mobile"),
+        .layout(.{
+            .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 70) }) },
+            .direction = .TOP_TO_BOTTOM,
+            .alignment = .CENTER,
+            .padding = .{ .x = 16, .y = 32 },
+            .gap = 16,
+        }),
+    });
+    {
+        defer cl.CLOSE();
+        cl.UI(&.{
+            .ID("LeftText"),
+            .layout(.{ .sizing = .{ .w = .grow }, .direction = .TOP_TO_BOTTOM, .gap = 8 }),
+        });
+        {
+            defer cl.CLOSE();
+            cl.text(
+                "Clay is a flex-box style UI auto layout library in C, with declarative syntax and microsecond performance.",
+                cl.Config.text(.{ .font_size = 56, .font_id = FONT_ID_TITLE_56, .color = COLOR_RED }),
+            );
+            cl.UI(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .grow, .h = .fixed(32) } }) });
+            cl.CLOSE();
+            cl.text(
+                "Clay is laying out this webpage .right now!",
+                cl.Config.text(.{ .font_size = 36, .font_id = FONT_ID_BODY_36, .color = COLOR_ORANGE }),
+            );
+        }
 
-const scrollbarData = ScrollbarData{};
-const animationLerpValue: f32 = -1.0;
+        cl.UI(&.{
+            .ID("HeroImageOuter"),
+            .layout(.{ .sizing = .{ .w = .grow }, .direction = .TOP_TO_BOTTOM, .alignment = .{ .x = .CENTER }, .gap = 16 }),
+        });
+        {
+            defer cl.CLOSE();
+            LandingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_5, "High performance", &checkImage5);
+            LandingPageBlob(2, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_4, "Flexbox-style responsive layout", &checkImage4);
+            LandingPageBlob(3, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_3, "Declarative syntax", &checkImage3);
+            LandingPageBlob(4, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_2, "Single .h file for C/C++", &checkImage2);
+            LandingPageBlob(5, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_1, "Compile to 15kb .wasm", &checkImage1);
+        }
+    }
+}
 
-fn createLayout(lerpValue: f32) cl.ClayArray(cl.RenderCommand) {
-    _ = lerpValue; // autofix
+fn featureBlocks(width_sizing: cl.SizingAxis, outer_padding: u16) void {
+    const text_config = cl.Config.text(.{ .font_size = 24, .font_id = FONT_ID_BODY_24, .color = COLOR_RED });
+    cl.UI(&.{
+        .ID("HFileBoxOuter"),
+        .layout(.{
+            .direction = .TOP_TO_BOTTOM,
+            .sizing = .{ .w = width_sizing },
+            .alignment = .{ .y = .CENTER },
+            .padding = .{ .x = outer_padding, .y = 32 },
+            .gap = 8,
+        }),
+    });
+    {
+        defer cl.CLOSE();
+        cl.UI(&.{
+            .ID("HFileIncludeOuter"),
+            .layout(.{ .padding = .{ .x = 8, .y = 4 } }),
+            .rectangle(.{ .color = COLOR_RED, .corner_radius = .all(8) }),
+        });
+        {
+            defer cl.CLOSE();
+            cl.text("#include cl.h", .text(.{ .font_size = 24, .font_id = FONT_ID_BODY_24, .color = COLOR_LIGHT }));
+        }
+        cl.text("~2000 lines of C99.", text_config);
+        cl.text("Zero dependencies, including no C standard library", text_config);
+    }
+    cl.UI(&.{
+        .ID("BringYourOwnRendererOuter"),
+        .layout(.{
+            .direction = .TOP_TO_BOTTOM,
+            .sizing = .{ .w = width_sizing },
+            .alignment = .{ .y = .CENTER },
+            .padding = .{ .x = outer_padding, .y = 32 },
+            .gap = 8,
+        }),
+    });
+    {
+        defer cl.CLOSE();
+        cl.text("Renderer agnostic.", .text(.{ .font_size = 24, .font_id = FONT_ID_BODY_24, .color = COLOR_ORANGE }));
+        cl.text("Layout with clay, then render with Raylib, WebGL Canvas or even as HTML.", text_config);
+        cl.text("Flexible output for easy compositing in your custom engine or environment.", text_config);
+    }
+}
+
+fn featureBlocksDesktop() void {
+    cl.UI(&.{
+        .ID("FeatureBlocksOuter"),
+        .layout(.{
+            .sizing = .{ .w = .grow },
+            .alignment = .{ .y = .CENTER },
+        }),
+        .border(.{ .between_children = .{ .width = 2, .color = COLOR_RED } }),
+    });
+    {
+        defer cl.CLOSE();
+        featureBlocks(.percent(0.5), 50);
+    }
+}
+
+fn featureBlocksMobile() void {
+    cl.UI(&.{
+        .ID("FeatureBlocksOuter"),
+        .layout(.{
+            .sizing = .{ .w = .grow },
+            .direction = .TOP_TO_BOTTOM,
+        }),
+        .border(.{ .between_children = .{ .width = 2, .color = COLOR_RED } }),
+    });
+    {
+        defer cl.CLOSE();
+        featureBlocks(.grow, 16);
+    }
+}
+
+fn declarativeSyntaxPage(title_text_config: cl.TextElementConfig, width_sizing: cl.SizingAxis) void {
+    cl.UI(&.{ .ID("SyntaxPageLeftText"), .layout(.{ .sizing = .{ .w = width_sizing }, .direction = .TOP_TO_BOTTOM, .gap = 8 }) });
+    {
+        defer cl.CLOSE();
+        cl.text("Declarative Syntax", .text(title_text_config));
+        cl.UI(&.{
+            .ID("SyntaxSpacer"),
+            .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 16 }) } }),
+        });
+        cl.CLOSE();
+        const text_conf = cl.Config.text(.{ .font_size = 28, .font_id = FONT_ID_BODY_28, .color = COLOR_RED });
+        cl.text("Flexible and readable declarative syntax with nested UI element hierarchies.", text_conf);
+        cl.text("Mix elements with standard C code like loops, conditionals and functions.", text_conf);
+        cl.text("Create your own library of re-usable components from UI primitives like text, images and rectangles.", text_conf);
+    }
+    cl.UI(&.{ .ID("SyntaxPageRightImageOuter"), .layout(.{ .sizing = .{ .w = width_sizing }, .alignment = .{ .x = .CENTER } }) });
+    {
+        defer cl.CLOSE();
+        cl.UI(&.{
+            .ID("SyntaxPageRightImage"),
+            .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 568 }) } }),
+            .image(.{ .image_data = &syntaxImage, .source_dimensions = .{ .h = 1136, .w = 1194 } }),
+        });
+        cl.CLOSE();
+    }
+}
+
+fn declarativeSyntaxPageDesktop() void {
+    cl.UI(&.{
+        .ID("SyntaxPageDesktop"),
+        .layout(.{ .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) }, .alignment = .{ .y = .CENTER }, .padding = .{ .x = 50 } }),
+    });
+    {
+        defer cl.CLOSE();
+        cl.UI(&.{
+            .ID("SyntaxPage"),
+            .layout(.{ .sizing = .{ .w = .grow, .h = .grow }, .alignment = .{ .y = .CENTER }, .padding = .all(32), .gap = 32 }),
+            .border(.{ .left = .{ .width = 2, .color = COLOR_RED }, .right = .{ .width = 2, .color = COLOR_RED } }),
+        });
+        {
+            defer cl.CLOSE();
+            declarativeSyntaxPage(.{ .font_size = 52, .font_id = FONT_ID_TITLE_52, .color = COLOR_RED }, .percent(0.5));
+        }
+    }
+}
+
+fn declarativeSyntaxPageMobile() void {
+    cl.UI(&.{
+        .ID("SyntaxPageMobile"),
+        .layout(.{
+            .direction = .TOP_TO_BOTTOM,
+            .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) },
+            .alignment = .CENTER,
+            .padding = .{ .x = 16, .y = 32 },
+            .gap = 16,
+        }),
+    });
+    {
+        defer cl.CLOSE();
+        declarativeSyntaxPage(.{ .font_size = 48, .font_id = FONT_ID_TITLE_48, .color = COLOR_RED }, .grow);
+    }
+}
+
+fn colorLerp(a: cl.Color, b: cl.Color, amount: f32) cl.Color {
+    return cl.Color{ a[0] + (b[0] - a[0]) * amount, a[1] + (b[1] - a[1]) * amount, a[2] + (b[2] - a[2]) * amount, a[3] + (b[3] - a[3]) * amount };
+}
+
+const LOREM_IPSUM_TEXT = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+
+fn highPerformancePage(lerp_value: f32, title_text_tonfig: cl.TextElementConfig, width_sizing: cl.SizingAxis) void {
+    cl.UI(&.{ .ID("PerformanceLeftText"), .layout(.{ .sizing = .{ .w = width_sizing }, .direction = .TOP_TO_BOTTOM, .gap = 8 }) });
+    {
+        defer cl.CLOSE();
+        cl.text("High Performance", .text(title_text_tonfig));
+        cl.UI(&.{ .ID("PerformanceSyntaxSpacer"), .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 16 }) } }) });
+        cl.CLOSE();
+        cl.text(
+            "Fast enough to recompute your entire UI every frame.",
+            .text(.{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_LIGHT }),
+        );
+        cl.text(
+            "Small memory footprint (3.5mb default) with static allocation & reuse. No malloc / free.",
+            .text(.{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_LIGHT }),
+        );
+        cl.text(
+            "Simplify animations and reactive UI design by avoiding the standard performance hacks.",
+            .text(.{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_LIGHT }),
+        );
+    }
+    cl.UI(&.{ .ID("PerformanceRightImageOuter"), .layout(.{ .sizing = .{ .w = width_sizing }, .alignment = .{ .x = .CENTER } }) });
+    {
+        defer cl.CLOSE();
+        cl.UI(&.{
+            .ID("PerformanceRightBorder"),
+            .layout(.{ .sizing = .{ .w = .grow, .h = .fixed(400) } }),
+            .border(.all(COLOR_LIGHT, 2, 0)),
+        });
+        {
+            defer cl.CLOSE();
+            cl.UI(&.{
+                .ID("AnimationDemoContainerLeft"),
+                .layout(.{ .sizing = .{ .w = .percent(0.35 + 0.3 * lerp_value), .h = .grow }, .alignment = .{ .y = .CENTER }, .padding = .all(16) }),
+                .rectangle(.{ .color = colorLerp(COLOR_RED, COLOR_ORANGE, lerp_value) }),
+            });
+            {
+                defer cl.CLOSE();
+                cl.text(LOREM_IPSUM_TEXT, .text(.{ .font_size = 16, .font_id = FONT_ID_BODY_16, .color = COLOR_LIGHT }));
+            }
+            cl.UI(&.{
+                .ID("AnimationDemoContainerRight"),
+                .layout(.{ .sizing = .{ .w = .grow, .h = .grow }, .alignment = .{ .y = .CENTER }, .padding = .all(16) }),
+                .rectangle(.{ .color = colorLerp(COLOR_ORANGE, COLOR_RED, lerp_value) }),
+            });
+            {
+                defer cl.CLOSE();
+                cl.text(LOREM_IPSUM_TEXT, .text(.{ .font_size = 16, .font_id = FONT_ID_BODY_16, .color = COLOR_LIGHT }));
+            }
+        }
+    }
+}
+
+fn highPerformancePageDesktop(lerp_value: f32) void {
+    cl.UI(&.{
+        .ID("PerformanceDesktop"),
+        .layout(
+            .{ .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) }, .alignment = .{ .y = .CENTER }, .padding = .{ .x = 82, .y = 32 }, .gap = 64 },
+        ),
+        .rectangle(.{ .color = COLOR_RED }),
+    });
+    {
+        defer cl.CLOSE();
+        highPerformancePage(lerp_value, .{ .font_size = 52, .font_id = FONT_ID_TITLE_52, .color = COLOR_LIGHT }, .percent(0.5));
+    }
+}
+
+fn highPerformancePageMobile(lerp_value: f32) void {
+    cl.UI(&.{
+        .ID("PerformanceMobile"),
+        .layout(
+            .{
+                .direction = .TOP_TO_BOTTOM,
+                .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) },
+                .alignment = .CENTER,
+                .padding = .{ .x = 16, .y = 32 },
+                .gap = 32,
+            },
+        ),
+        .rectangle(.{ .color = COLOR_RED }),
+    });
+    {
+        defer cl.CLOSE();
+        highPerformancePage(lerp_value, .{ .font_size = 48, .font_id = FONT_ID_TITLE_48, .color = COLOR_LIGHT }, .grow);
+    }
+}
+
+fn rendererButtonActive(text: []const u8) void {
+    cl.UI(&.{
+        .layout(.{ .sizing = .{ .w = .fixed(300) }, .padding = .all(16) }),
+        .rectangle(.{ .color = COLOR_RED, .corner_radius = .all(10) }),
+    });
+    {
+        defer cl.CLOSE();
+        cl.text(text, .text(.{ .font_size = 28, .font_id = FONT_ID_BODY_28, .color = COLOR_LIGHT }));
+    }
+}
+
+fn rendererButtonInactive(index: u32, text: []const u8) void {
+    cl.UI(&.{ .layout(.{}), .outside(.{ 2, COLOR_RED }, 10) });
+    {
+        cl.CLOSE();
+        cl.UI(&.{
+            .ID("RendererButtonInactiveInner", index),
+            .layout(.{ .sizing = .{ .w = .fixed(300) }, .padding = .all(16) }),
+            .rectangle(.{ .color = COLOR_LIGHT, .corner_radius = .all(10) }),
+        });
+        {
+            defer cl.CLOSE();
+            cl.text(text, .text(.{ .font_size = 28, .font_id = FONT_ID_BODY_28, .color = COLOR_RED }));
+        }
+    }
+}
+
+fn rendererPage(title_text_config: cl.TextElementConfig, width_sizing: cl.SizingAxis) void {
+    cl.UI(&.{ .ID("RendererLeftText"), .layout(.{ .sizing = .{ .w = width_sizing }, .direction = .TOP_TO_BOTTOM, .gap = 8 }) });
+    {
+        defer cl.CLOSE();
+        cl.text("Renderer & Platform Agnostic", .text(title_text_config));
+        cl.UI(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 16 }) } }) });
+        cl.CLOSE();
+        cl.text(
+            "Clay outputs a sorted array of primitive render commands, such as RECTANGLE, TEXT or IMAGE.",
+            .text(.{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_RED }),
+        );
+        cl.text(
+            "Write your own renderer in a few hundred lines of code, or use the provided examples for Raylib, WebGL canvas and more.",
+            .text(.{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_RED }),
+        );
+        cl.text(
+            "There's even an HTML renderer - you're looking at it .right now!",
+            .text(.{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_RED }),
+        );
+    }
+    cl.UI(&.{
+        .ID("RendererRightText"),
+        .layout(.{ .sizing = .{ .w = width_sizing }, .alignment = .{ .x = .CENTER }, .direction = .TOP_TO_BOTTOM, .gap = 16 }),
+    });
+    {
+        defer cl.CLOSE();
+        cl.text("Try changing renderer!", .text(.{ .font_size = 36, .font_id = FONT_ID_BODY_36, .color = COLOR_ORANGE }));
+        cl.UI(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 32 }) } }) });
+        cl.CLOSE();
+        rendererButtonActive("Raylib Renderer");
+    }
+}
+
+fn rendererPageDesktop() void {
+    cl.UI(&.{
+        .ID("RendererPageDesktop"),
+        .layout(.{
+            .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) },
+            .alignment = .{ .y = .CENTER },
+            .padding = .{ .x = 50 },
+        }),
+    });
+    {
+        defer cl.CLOSE();
+        cl.UI(&.{
+            .ID("RendererPage"),
+            .layout(.{ .sizing = .grow, .alignment = .{ .y = .CENTER }, .padding = .all(32), .gap = 32 }),
+            .border(.{ .left = .{ .width = 2, .color = COLOR_RED }, .right = .{ .width = 2, .color = COLOR_RED } }),
+        });
+        {
+            defer cl.CLOSE();
+            rendererPage(.{ .font_size = 52, .font_id = FONT_ID_TITLE_52, .color = COLOR_RED }, .percent(0.5));
+        }
+    }
+}
+
+fn rendererPageMobile() void {
+    cl.UI(&.{
+        .ID("RendererMobile"),
+        .layout(
+            .{
+                .direction = .TOP_TO_BOTTOM,
+                .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) },
+                .alignment = .CENTER,
+                .padding = .{ .x = 16, .y = 32 },
+                .gap = 32,
+            },
+        ),
+        .rectangle(.{ .color = COLOR_LIGHT }),
+    });
+    {
+        defer cl.CLOSE();
+        rendererPage(.{ .font_size = 52, .font_id = FONT_ID_TITLE_52, .color = COLOR_RED }, .grow);
+    }
+}
+
+fn createLayout(lerp_value: f32) cl.ClayArray(cl.RenderCommand) {
     const mobileScreen = window_width < 750;
     cl.beginLayout();
 
     cl.UI(&.{
         .ID("OuterContainer"),
-        .layout(.{ .size = .grow, .direction = .TOP_TO_BOTTOM }),
+        .layout(.{ .sizing = .grow, .direction = .TOP_TO_BOTTOM }),
         .rectangle(.{ .color = COLOR_LIGHT }),
     });
     {
@@ -148,7 +515,7 @@ fn createLayout(lerpValue: f32) cl.ClayArray(cl.RenderCommand) {
         cl.UI(&.{
             .ID("Header"),
             .layout(.{
-                .size = .{ .h = .fixed(50), .w = .grow },
+                .sizing = .{ .h = .fixed(50), .w = .grow },
                 .alignment = .{ .y = .CENTER },
                 .padding = .{ .x = 32 },
                 .gap = 24,
@@ -161,11 +528,11 @@ fn createLayout(lerpValue: f32) cl.ClayArray(cl.RenderCommand) {
                 .font_size = 24,
                 .color = .{ 61, 26, 5, 255 },
             }));
-            cl.UI(&.{ .ID("LinkExamplesOuter"), .layout(.{ .size = .{ .w = .grow } }) });
+            cl.UI(&.{ .ID("HeaderSpacer"), .layout(.{ .sizing = .{ .w = .grow } }) });
             cl.CLOSE();
 
             if (!mobileScreen) {
-                cl.UI(&.{ .ID("LinkExamplesOuter"), .layout(.{}), .rectangle(.{ .color = .{ 0, 0, 0, 0 } }) });
+                cl.UI(&.{ .ID("LinkExamplesInner"), .layout(.{}), .rectangle(.{ .color = .{ 0, 0, 0, 0 } }) });
                 {
                     defer cl.CLOSE();
                     cl.text("Examples", cl.Config.text(.{ .font_id = FONT_ID_BODY_24, .font_size = 24, .color = .{ 61, 26, 5, 255 } }));
@@ -177,7 +544,6 @@ fn createLayout(lerpValue: f32) cl.ClayArray(cl.RenderCommand) {
                 }
             }
 
-            // clay.Rectangle({cornerRadius = clay.CornerRadiusAll(10), color = clay.PointerOver(clay.GetElementId(clay.MakeString("LinkGithubOuter"))) ? COLOR_LIGHT_HOVER : COLOR_LIGHT})
             cl.UI(&.{
                 .ID("LinkGithubOuter"),
                 .layout(.{ .padding = .{ .x = 32, .y = 6 } }),
@@ -198,7 +564,7 @@ fn createLayout(lerpValue: f32) cl.ClayArray(cl.RenderCommand) {
         inline for (COLORS_TOP_BORDER, 0..) |color, i| {
             cl.UI(&.{
                 .ID("TopBorder" ++ .{i}),
-                .layout(.{ .size = .{ .h = .fixed(4), .w = .grow } }),
+                .layout(.{ .sizing = .{ .h = .fixed(4), .w = .grow } }),
                 .rectangle(.{ .color = color }),
             });
             cl.CLOSE();
@@ -207,25 +573,24 @@ fn createLayout(lerpValue: f32) cl.ClayArray(cl.RenderCommand) {
         cl.UI(&.{
             .ID("ScrollContainerBackgroundRectangle"),
             .scroll(.{ .vertical = true }),
-            .layout(.{ .size = .grow, .direction = .TOP_TO_BOTTOM }),
+            .layout(.{ .sizing = .grow, .direction = .TOP_TO_BOTTOM }),
             .rectangle(.{ .color = COLOR_LIGHT }),
             .border(.{ .between_children = .{ .width = 2, .color = COLOR_RED } }),
         });
         {
             defer cl.CLOSE();
-            // if (!mobileScreen) {
-            if (true) {
+            if (!mobileScreen) {
                 landingPageDesktop();
-                // FeatureBlocksDesktop()
-                // DeclarativeSyntaxPageDesktop()
-                // HighPerformancePageDesktop(lerpValue)
-                // RendererPageDesktop()
+                featureBlocksDesktop();
+                declarativeSyntaxPageDesktop();
+                highPerformancePageDesktop(lerp_value);
+                rendererPageDesktop();
             } else {
-                // LandingPageMobile()
-                // FeatureBlocksMobile()
-                // DeclarativeSyntaxPageMobile()
-                // HighPerformancePageMobile(lerpValue)
-                // RendererPageMobile()
+                landingPageMobile();
+                featureBlocksMobile();
+                declarativeSyntaxPageMobile();
+                highPerformancePageMobile(lerp_value);
+                rendererPageMobile();
             }
         }
     }
@@ -249,6 +614,7 @@ pub fn main() anyerror!void {
     cl.setMeasureTextFunction(renderer.measureText);
 
     // init raylib
+    rl.setTraceLogLevel(.log_error);
     rl.setConfigFlags(.{
         .msaa_4x_hint = true,
         .vsync_hint = true,
@@ -256,7 +622,8 @@ pub fn main() anyerror!void {
         .window_resizable = true,
     });
     rl.initWindow(1000, 1000, "Raylib zig Example");
-    rl.setTargetFPS(60);
+    rl.setWindowMinSize(300, 100);
+    rl.setTargetFPS(120);
 
     // load assets
     loadFont(@embedFile("resources/Calistoga-Regular.ttf"), FONT_ID_TITLE_56, 56);
@@ -277,11 +644,19 @@ pub fn main() anyerror!void {
     checkImage4 = rl.loadTextureFromImage(rl.loadImageFromMemory(".png", @embedFile("resources/check_4.png")));
     checkImage5 = rl.loadTextureFromImage(rl.loadImageFromMemory(".png", @embedFile("resources/check_5.png")));
 
+    rl.setTextureFilter(syntaxImage, .texture_filter_bilinear);
+
+    var animation_lerp_value: f32 = -1.0;
     var debug_mode_enabled = false;
     while (!rl.windowShouldClose()) {
         if (rl.isKeyPressed(.key_d)) {
             debug_mode_enabled = !debug_mode_enabled;
             cl.setDebugModeEnabled(debug_mode_enabled);
+        }
+
+        animation_lerp_value += rl.getFrameTime();
+        if (animation_lerp_value > 1) {
+            animation_lerp_value = animation_lerp_value - 2;
         }
 
         window_width = rl.getScreenWidth();
@@ -293,11 +668,18 @@ pub fn main() anyerror!void {
             .y = mouse_pos.y,
         }, rl.isMouseButtonDown(.mouse_button_left));
 
+        const scroll_delta = rl.getMouseWheelMoveV().multiply(.{ .x = 6, .y = 6 });
+        cl.updateScrollContainers(
+            false,
+            .{ .x = scroll_delta.x, .y = scroll_delta.y },
+            rl.getFrameTime(),
+        );
+
         cl.setLayoutDimensions(.{
             .w = @floatFromInt(window_width),
             .h = @floatFromInt(window_height),
         });
-        var render_commands = createLayout(0);
+        var render_commands = createLayout(if (animation_lerp_value < 0) animation_lerp_value + 1 else 1 - animation_lerp_value);
 
         rl.beginDrawing();
         renderer.clayRaylibRender(&render_commands, allocator);
