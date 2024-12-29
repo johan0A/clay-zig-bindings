@@ -134,12 +134,12 @@ fn sidebarItemCompoment(index: usize) void {
 // An example function to begin the "root" of your layout tree
 fn createLayout(profile_picture: *const rl.Texture2D) clay.ClayArray(clay.RenderCommand) {
     clay.beginLayout();
+    clay.UI(&.{
+        .ID("OuterContainer"),
+        .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .gap = 16 }),
+        .rectangle(.{ .color = white }),
+    });
     {
-        clay.UI(&.{
-            .ID("OuterContainer"),
-            .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .gap = 16 }),
-            .rectangle(.{ .color = white }),
-        });
         defer clay.CLOSE();
 
         clay.UI(&.{

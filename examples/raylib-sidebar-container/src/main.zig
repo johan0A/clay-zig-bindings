@@ -21,12 +21,12 @@ fn sidebarItemCompoment(index: usize) void {
 
 fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderCommand) {
     cl.beginLayout();
+    cl.UI(&.{
+        .ID("OuterContainer"),
+        .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .gap = 16 }),
+        .rectangle(.{ .color = white }),
+    });
     {
-        cl.UI(&.{
-            .ID("OuterContainer"),
-            .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .gap = 16 }),
-            .rectangle(.{ .color = white }),
-        });
         defer cl.CLOSE();
 
         cl.UI(&.{
