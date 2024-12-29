@@ -398,15 +398,17 @@ pub const createArenaWithCapacityAndMemory = cdefs.Clay_CreateArenaWithCapacityA
 pub const initialize = cdefs.Clay_Initialize;
 pub const setLayoutDimensions = cdefs.Clay_SetLayoutDimensions;
 pub const beginLayout = cdefs.Clay_BeginLayout;
-pub const endLayout = cdefs.Clay_EndLayout;
 pub const pointerOver = cdefs.Clay_PointerOver;
 pub const getScrollContainerData = cdefs.Clay_GetScrollContainerData;
 pub const renderCommandArrayGet = cdefs.Clay_RenderCommandArray_Get;
 pub const setDebugModeEnabled = cdefs.Clay_SetDebugModeEnabled;
 pub const hashString = cdefs.Clay__HashString;
 
+threadlocal var nesting_level: i32 = 0;
+
 pub fn UI(configs: []const Config) void {
     cdefs.Clay__OpenElement();
+    nesting_level += 1;
     for (configs) |config| {
         switch (config) {
             .Layout => |layoutConf| cdefs.Clay__AttachLayoutConfig(layoutConf),
@@ -418,7 +420,21 @@ pub fn UI(configs: []const Config) void {
 }
 
 pub fn CLOSE() void {
+    nesting_level -= 1;
+    if (nesting_level < 0) {
+        std.debug.panic("clay.CLOSE() was called but no clay UI element is currently open", .{});
+    }
     cdefs.Clay__CloseElement();
+}
+
+pub fn endLayout() ClayArray(RenderCommand) {
+    if (nesting_level > 0) {
+        std.debug.panic(
+            \\clay.endLayout() was called but {} clay UI elements are still currently open.
+            \\Make sure every call to clay.UI() is matched with a call to clay.CLOSE() before the end of the layout.
+        , .{nesting_level});
+    }
+    return cdefs.Clay_EndLayout();
 }
 
 pub fn setPointerState(position: Vector2, pointer_down: bool) void {
