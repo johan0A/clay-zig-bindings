@@ -76,6 +76,12 @@ fn loadFont(file_data: ?[]const u8, font_id: u16, font_size: i32) void {
     rl.setTextureFilter(renderer.raylib_fonts[font_id].?.texture, .bilinear);
 }
 
+fn loadImage(comptime path: [:0]const u8) rl.Texture2D {
+    const texture = rl.loadTextureFromImage(rl.loadImageFromMemory(@ptrCast(std.fs.path.extension(path)), @embedFile(path)));
+    rl.setTextureFilter(texture, .bilinear);
+    return texture;
+}
+
 pub fn main() anyerror!void {
     const allocator = std.heap.page_allocator;
 
@@ -88,19 +94,17 @@ pub fn main() anyerror!void {
     cl.setMeasureTextFunction(renderer.measureText);
 
     // init raylib
-    rl.setTraceLogLevel(.err);
     rl.setConfigFlags(.{
         .msaa_4x_hint = true,
-        .vsync_hint = true,
-        .window_highdpi = true,
         .window_resizable = true,
     });
     rl.initWindow(1000, 1000, "Raylib zig Example");
-    rl.setTargetFPS(60);
+    rl.setWindowMinSize(300, 100);
+    rl.setTargetFPS(120);
 
     // load assets
     loadFont(@embedFile("./resources/Roboto-Regular.ttf"), 0, 24);
-    const profile_picture = rl.loadTextureFromImage(rl.loadImageFromMemory(".png", @embedFile("./resources/profile-picture.png")));
+    const profile_picture = loadImage("./resources/profile-picture.png");
 
     var debug_mode_enabled = false;
     while (!rl.windowShouldClose()) {

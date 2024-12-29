@@ -368,7 +368,12 @@ fn highPerformancePageDesktop(lerp_value: f32) void {
     cl.UI(&.{
         .ID("PerformanceDesktop"),
         .layout(
-            .{ .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) }, .alignment = .{ .y = .CENTER }, .padding = .{ .x = 82, .y = 32 }, .gap = 64 },
+            .{
+                .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) },
+                .alignment = .{ .y = .CENTER },
+                .padding = .{ .x = 82, .y = 32 },
+                .gap = 64,
+            },
         ),
         .rectangle(.{ .color = COLOR_RED }),
     });
@@ -602,6 +607,12 @@ fn loadFont(file_data: ?[]const u8, font_id: u16, font_size: i32) void {
     rl.setTextureFilter(renderer.raylib_fonts[font_id].?.texture, .bilinear);
 }
 
+fn loadImage(comptime path: [:0]const u8) rl.Texture2D {
+    const texture = rl.loadTextureFromImage(rl.loadImageFromMemory(@ptrCast(std.fs.path.extension(path)), @embedFile(path)));
+    rl.setTextureFilter(texture, .bilinear);
+    return texture;
+}
+
 pub fn main() anyerror!void {
     const allocator = std.heap.page_allocator;
 
@@ -614,11 +625,8 @@ pub fn main() anyerror!void {
     cl.setMeasureTextFunction(renderer.measureText);
 
     // init raylib
-    rl.setTraceLogLevel(.err);
     rl.setConfigFlags(.{
         .msaa_4x_hint = true,
-        .vsync_hint = true,
-        .window_highdpi = true,
         .window_resizable = true,
     });
     rl.initWindow(1000, 1000, "Raylib zig Example");
@@ -637,14 +645,12 @@ pub fn main() anyerror!void {
     loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_24, 24);
     loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_16, 16);
 
-    syntaxImage = rl.loadTextureFromImage(rl.loadImageFromMemory(".png", @embedFile("resources/declarative.png")));
-    checkImage1 = rl.loadTextureFromImage(rl.loadImageFromMemory(".png", @embedFile("resources/check_1.png")));
-    checkImage2 = rl.loadTextureFromImage(rl.loadImageFromMemory(".png", @embedFile("resources/check_2.png")));
-    checkImage3 = rl.loadTextureFromImage(rl.loadImageFromMemory(".png", @embedFile("resources/check_3.png")));
-    checkImage4 = rl.loadTextureFromImage(rl.loadImageFromMemory(".png", @embedFile("resources/check_4.png")));
-    checkImage5 = rl.loadTextureFromImage(rl.loadImageFromMemory(".png", @embedFile("resources/check_5.png")));
-
-    rl.setTextureFilter(syntaxImage, .bilinear);
+    syntaxImage = loadImage("resources/declarative.png");
+    checkImage1 = loadImage("resources/check_1.png");
+    checkImage2 = loadImage("resources/check_2.png");
+    checkImage3 = loadImage("resources/check_3.png");
+    checkImage4 = loadImage("resources/check_4.png");
+    checkImage5 = loadImage("resources/check_5.png");
 
     var animation_lerp_value: f32 = -1.0;
     var debug_mode_enabled = false;
