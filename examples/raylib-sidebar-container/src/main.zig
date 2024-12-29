@@ -73,7 +73,7 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
 
 fn loadFont(file_data: ?[]const u8, font_id: u16, font_size: i32) void {
     renderer.raylib_fonts[font_id] = rl.loadFontFromMemory(".ttf", file_data, font_size * 2, null);
-    rl.setTextureFilter(renderer.raylib_fonts[font_id].?.texture, .texture_filter_bilinear);
+    rl.setTextureFilter(renderer.raylib_fonts[font_id].?.texture, .bilinear);
 }
 
 pub fn main() anyerror!void {
@@ -88,7 +88,7 @@ pub fn main() anyerror!void {
     cl.setMeasureTextFunction(renderer.measureText);
 
     // init raylib
-    rl.setTraceLogLevel(.log_error);
+    rl.setTraceLogLevel(.err);
     rl.setConfigFlags(.{
         .msaa_4x_hint = true,
         .vsync_hint = true,
@@ -104,7 +104,7 @@ pub fn main() anyerror!void {
 
     var debug_mode_enabled = false;
     while (!rl.windowShouldClose()) {
-        if (rl.isKeyPressed(.key_d)) {
+        if (rl.isKeyPressed(.d)) {
             debug_mode_enabled = !debug_mode_enabled;
             cl.setDebugModeEnabled(debug_mode_enabled);
         }
@@ -113,7 +113,7 @@ pub fn main() anyerror!void {
         cl.setPointerState(.{
             .x = mouse_pos.x,
             .y = mouse_pos.y,
-        }, rl.isMouseButtonDown(.mouse_button_left));
+        }, rl.isMouseButtonDown(.left));
 
         const scroll_delta = rl.getMouseWheelMoveV().multiply(.{ .x = 6, .y = 6 });
         cl.updateScrollContainers(
