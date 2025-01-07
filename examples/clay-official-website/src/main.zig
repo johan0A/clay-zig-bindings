@@ -9,6 +9,7 @@ var checkImage2: rl.Texture2D = undefined;
 var checkImage3: rl.Texture2D = undefined;
 var checkImage4: rl.Texture2D = undefined;
 var checkImage5: rl.Texture2D = undefined;
+var zig_logo_image6: rl.Texture2D = undefined;
 
 const FONT_ID_BODY_16 = 0;
 const FONT_ID_TITLE_56 = 9;
@@ -31,6 +32,7 @@ const COLOR_ORANGE = cl.Color{ 225, 138, 50, 255 };
 const COLOR_BLUE = cl.Color{ 111, 173, 162, 255 };
 const COLOR_TEAL = cl.Color{ 111, 173, 162, 255 };
 const COLOR_BLUE_DARK = cl.Color{ 2, 32, 82, 255 };
+const COLOR_ZIG_LOGO = cl.Color{ 247, 164, 29, 255 };
 
 // Colors for top stripe
 const COLORS_TOP_BORDER = [_]cl.Color{
@@ -52,17 +54,17 @@ const border_data = cl.BorderData{ .width = 2, .color = COLOR_RED };
 var window_height: isize = 0;
 var window_width: isize = 0;
 
-fn LandingPageBlob(index: u32, font_size: u16, font_id: u16, color: cl.Color, text: []const u8, image: *rl.Texture2D) void {
+fn LandingPageBlob(index: u32, font_size: u16, font_id: u16, color: cl.Color, image_size: f32, max_width: f32, text: []const u8, image: *rl.Texture2D) void {
     cl.UI(&.{
         .IDI("HeroBlob", index),
-        .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 480 }) }, .padding = .all(16), .gap = 16, .alignment = .{ .y = .CENTER } }),
+        .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = max_width }) }, .padding = .all(16), .gap = 16, .alignment = .{ .y = .CENTER } }),
         .border(.outside(color, 2, 10)),
     });
     {
         defer cl.CLOSE();
         cl.UI(&.{
             .IDI("CheckImage", index),
-            .layout(.{ .sizing = .{ .w = .fixed(32) } }),
+            .layout(.{ .sizing = .{ .w = .fixed(image_size) } }),
             .image(.{ .image_data = image, .source_dimensions = .{ .w = 128, .h = 128 } }),
         });
         cl.CLOSE();
@@ -84,40 +86,59 @@ fn landingPageDesktop() void {
         defer cl.CLOSE();
         cl.UI(&.{
             .ID("LandingPage1"),
-            .layout(.{ .sizing = .grow, .alignment = .{ .y = .CENTER }, .padding = .all(32), .gap = 32 }),
+            .layout(.{
+                .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 70) }) },
+                .direction = .TOP_TO_BOTTOM,
+                .alignment = .{ .x = .CENTER },
+                .padding = .all(32),
+                .gap = 32,
+            }),
             .border(.{ .left = border_data, .right = border_data }),
         });
         {
             defer cl.CLOSE();
-            cl.UI(&.{
-                .ID("LeftText"),
-                .layout(.{ .sizing = .{ .w = .percent(0.55) }, .direction = .TOP_TO_BOTTOM, .gap = 8 }),
-            });
-            {
-                defer cl.CLOSE();
-                cl.text(
-                    "Clay is a flex-box style UI auto layout library in C, with declarative syntax and microsecond performance.",
-                    cl.Config.text(.{ .font_size = 56, .font_id = FONT_ID_TITLE_56, .color = COLOR_RED }),
-                );
-                cl.UI(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .grow, .h = .fixed(32) } }) });
-                cl.CLOSE();
-                cl.text(
-                    "Clay is laying out this webpage .right now!",
-                    cl.Config.text(.{ .font_size = 36, .font_id = FONT_ID_BODY_36, .color = COLOR_ORANGE }),
-                );
-            }
+            LandingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_ZIG_LOGO, 64, 510, "The official Clay website recreated with zclay: clay-zig-bindings", &zig_logo_image6);
 
             cl.UI(&.{
-                .ID("HeroImageOuter"),
-                .layout(.{ .sizing = .{ .w = .percent(0.45) }, .direction = .TOP_TO_BOTTOM, .alignment = .{ .x = .CENTER }, .gap = 16 }),
+                .ID("ClayPresentation"),
+                .layout(.{
+                    .sizing = .grow,
+                    .alignment = .{ .y = .CENTER },
+                    .gap = 16,
+                }),
             });
             {
                 defer cl.CLOSE();
-                LandingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_5, "High performance", &checkImage5);
-                LandingPageBlob(2, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_4, "Flexbox-style responsive layout", &checkImage4);
-                LandingPageBlob(3, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_3, "Declarative syntax", &checkImage3);
-                LandingPageBlob(4, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_2, "Single .h file for C/C++", &checkImage2);
-                LandingPageBlob(5, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_1, "Compile to 15kb .wasm", &checkImage1);
+                cl.UI(&.{
+                    .ID("LeftText"),
+                    .layout(.{ .sizing = .{ .w = .percent(0.55) }, .direction = .TOP_TO_BOTTOM, .gap = 8 }),
+                });
+                {
+                    defer cl.CLOSE();
+                    cl.text(
+                        "Clay is a flex-box style UI auto layout library in C, with declarative syntax and microsecond performance.",
+                        cl.Config.text(.{ .font_size = 56, .font_id = FONT_ID_TITLE_56, .color = COLOR_RED }),
+                    );
+                    cl.UI(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .grow, .h = .fixed(32) } }) });
+                    cl.CLOSE();
+                    cl.text(
+                        "Clay is laying out this webpage .right now!",
+                        cl.Config.text(.{ .font_size = 36, .font_id = FONT_ID_BODY_36, .color = COLOR_ORANGE }),
+                    );
+                }
+
+                cl.UI(&.{
+                    .ID("HeroImageOuter"),
+                    .layout(.{ .sizing = .{ .w = .percent(0.45) }, .direction = .TOP_TO_BOTTOM, .alignment = .{ .x = .CENTER }, .gap = 16 }),
+                });
+                {
+                    defer cl.CLOSE();
+                    LandingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_5, 32, 480, "High performance", &checkImage5);
+                    LandingPageBlob(2, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_4, 32, 480, "Flexbox-style responsive layout", &checkImage4);
+                    LandingPageBlob(3, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_3, 32, 480, "Declarative syntax", &checkImage3);
+                    LandingPageBlob(4, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_2, 32, 480, "Single .h file for C/C++", &checkImage2);
+                    LandingPageBlob(5, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_1, 32, 480, "Compile to 15kb .wasm", &checkImage1);
+                }
             }
         }
     }
@@ -136,6 +157,7 @@ fn landingPageMobile() void {
     });
     {
         defer cl.CLOSE();
+        LandingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_ZIG_LOGO, 64, 510, "The official Clay website recreated with zclay: clay-zig-bindings", &zig_logo_image6);
         cl.UI(&.{
             .ID("LeftText"),
             .layout(.{ .sizing = .{ .w = .grow }, .direction = .TOP_TO_BOTTOM, .gap = 8 }),
@@ -160,11 +182,11 @@ fn landingPageMobile() void {
         });
         {
             defer cl.CLOSE();
-            LandingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_5, "High performance", &checkImage5);
-            LandingPageBlob(2, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_4, "Flexbox-style responsive layout", &checkImage4);
-            LandingPageBlob(3, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_3, "Declarative syntax", &checkImage3);
-            LandingPageBlob(4, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_2, "Single .h file for C/C++", &checkImage2);
-            LandingPageBlob(5, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_1, "Compile to 15kb .wasm", &checkImage1);
+            LandingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_5, 32, 480, "High performance", &checkImage5);
+            LandingPageBlob(2, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_4, 32, 480, "Flexbox-style responsive layout", &checkImage4);
+            LandingPageBlob(3, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_3, 32, 480, "Declarative syntax", &checkImage3);
+            LandingPageBlob(4, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_2, 32, 480, "Single .h file for C/C++", &checkImage2);
+            LandingPageBlob(5, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_1, 32, 480, "Compile to 15kb .wasm", &checkImage1);
         }
     }
 }
@@ -651,6 +673,7 @@ pub fn main() anyerror!void {
     checkImage3 = loadImage("resources/check_3.png");
     checkImage4 = loadImage("resources/check_4.png");
     checkImage5 = loadImage("resources/check_5.png");
+    zig_logo_image6 = loadImage("resources/zig-mark.png");
 
     var animation_lerp_value: f32 = -1.0;
     var debug_mode_enabled = false;
