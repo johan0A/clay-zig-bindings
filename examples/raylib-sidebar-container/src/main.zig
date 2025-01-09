@@ -10,26 +10,25 @@ const white: cl.Color = .{ 250, 250, 255, 255 };
 
 const sidebar_item_layout: cl.LayoutConfig = .{ .sizing = .{ .w = .grow, .h = .fixed(50) } };
 
-fn sidebarItemCompoment(index: usize) void {
-    cl.UI(&.{
+// Re-useable components are just normal functions
+fn sidebarItemComponent(index: usize) void {
+    cl.singleElem(&.{
         .IDI("SidebarBlob", @intCast(index)),
         .layout(sidebar_item_layout),
         .rectangle(.{ .color = orange }),
     });
-    defer cl.CLOSE();
 }
 
+// An example function to begin the "root" of your layout tree
 fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderCommand) {
     cl.beginLayout();
-    cl.UI(&.{
+    if (cl.OPEN(&.{
         .ID("OuterContainer"),
         .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .gap = 16 }),
         .rectangle(.{ .color = white }),
-    });
-    {
+    })) {
         defer cl.CLOSE();
-
-        cl.UI(&.{
+        if (cl.OPEN(&.{
             .ID("SideBar"),
             .layout(.{
                 .direction = .TOP_TO_BOTTOM,
@@ -39,34 +38,33 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
                 .gap = 16,
             }),
             .rectangle(.{ .color = light_grey }),
-        });
-        {
+        })) {
             defer cl.CLOSE();
-            cl.UI(&.{
+            if (cl.OPEN(&.{
                 .ID("ProfilePictureOuter"),
                 .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .alignment = .{ .x = .LEFT, .y = .CENTER }, .gap = 16 }),
                 .rectangle(.{ .color = red }),
-            });
-            {
+            })) {
                 defer cl.CLOSE();
-                cl.UI(&.{
+                cl.singleElem(&.{
                     .ID("ProfilePicture"),
                     .layout(.{ .sizing = .{ .h = .fixed(60), .w = .fixed(60) } }),
                     .image(.{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(profile_picture) }),
                 });
-                cl.CLOSE();
                 cl.text("Clay - UI Library", cl.Config.text(.{ .font_size = 24, .color = light_grey }));
             }
 
-            for (0..5) |i| sidebarItemCompoment(i);
+            for (0..5) |i| sidebarItemComponent(i);
         }
 
-        cl.UI(&.{
+        if (cl.OPEN(&.{
             .ID("MainContent"),
             .layout(.{ .sizing = .grow }),
             .rectangle(.{ .color = light_grey }),
-        });
-        cl.CLOSE();
+        })) {
+            defer cl.CLOSE();
+            //...
+        }
     }
     return cl.endLayout();
 }

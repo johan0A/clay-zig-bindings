@@ -406,7 +406,7 @@ pub const hashString = cdefs.Clay__HashString;
 
 threadlocal var nesting_level: i32 = 0;
 
-pub fn UI(configs: []const Config) void {
+pub fn OPEN(configs: []const Config) bool {
     cdefs.Clay__OpenElement();
     nesting_level += 1;
     for (configs) |config| {
@@ -417,21 +417,27 @@ pub fn UI(configs: []const Config) void {
         }
     }
     cdefs.Clay__ElementPostConfiguration();
+    return true;
 }
 
 pub fn CLOSE() void {
     nesting_level -= 1;
     if (nesting_level < 0) {
-        std.debug.panic("clay.CLOSE() was called but no clay UI element is currently open", .{});
+        std.debug.panic("clay.CLOSE() was called but no clay element is currently open", .{});
     }
     cdefs.Clay__CloseElement();
+}
+
+pub fn singleElem(configs: []const Config) void {
+    _ = OPEN(configs);
+    CLOSE();
 }
 
 pub fn endLayout() ClayArray(RenderCommand) {
     if (nesting_level > 0) {
         std.debug.panic(
-            \\clay.endLayout() was called but {} clay UI elements are still currently open.
-            \\Make sure every call to clay.UI() is matched with a call to clay.CLOSE() before the end of the layout.
+            \\clay.endLayout() was called but {} clay elements are still currently open.
+            \\Make sure every call to clay.OPEN() is matched with a call to clay.CLOSE() before the end of the layout.
         , .{nesting_level});
     }
     return cdefs.Clay_EndLayout();

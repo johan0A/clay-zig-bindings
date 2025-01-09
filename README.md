@@ -1,10 +1,10 @@
 ### Zig Bindings for clay.h
 
 > [!IMPORTANT]  
-> Zig 0.14.0 or higher is required.
+> Zig 0.14.0 or higher is required. (tested with zig 0.14.0-dev.2628+5b5c60f4)
 
-> [!NOTE]  
-> This project currently is in beta.
+> [!NOTE]
+> This project is currently in beta.
 
 This repository contains Zig bindings for the [clay UI layout library](https://github.com/nicbarker/clay), as well as an example implementation of the [clay website](https://nicbarker.com/clay) in Zig.
 
@@ -15,7 +15,8 @@ The **most notable difference** between the C API and the Zig bindings is that o
 other changes include:
  - minor naming changes
  - ability to initialize a parameter by calling a function that is part of its type's namespace for example `.fixed()` or `.layout()`
- - ability to initialize a parameter by using a public constant that is part of its type's namespace for example `.grow` 
+ - ability to initialize a parameter by using a public constant that is part of its type's namespace for example `.grow`
+ - clay.singleElem() is available to create a clay element without creating a scope
 
 In C:
 ```C
@@ -37,7 +38,7 @@ CLAY(
 
 In Zig:
 ```Zig
-clay.UI(&.{ // first function call to open the scope
+if (clay.OPEN(&.{ // first function call to open the scope
     .ID("SideBar"),
     .layout(.{
         .direction = .TOP_TO_BOTTOM,
@@ -47,8 +48,7 @@ clay.UI(&.{ // first function call to open the scope
         .gap = 16,
     }),
     .rectangle(.{ .color = light_grey }),
-});
-{
+})) {
     defer clay.CLOSE(); // defered second function call to close the scope
     // Child elements here
 }
@@ -119,30 +119,25 @@ const white: clay.Color = .{ 250, 250, 255, 255 };
 // Layout config is just a struct that can be declared statically, or inline
 const sidebar_item_layout: clay.LayoutConfig = .{ .sizing = .{ .w = .grow, .h = .fixed(50) } };
 
-
 // Re-useable components are just normal functions
-fn sidebarItemCompoment(index: usize) void {
-    clay.UI(&.{
+fn sidebarItemComponent(index: usize) void {
+    clay.singleElem(&.{
         .IDI("SidebarBlob", @intCast(index)),
         .layout(sidebar_item_layout),
         .rectangle(.{ .color = orange }),
     });
-    defer clay.CLOSE();
 }
-
 
 // An example function to begin the "root" of your layout tree
 fn createLayout(profile_picture: *const rl.Texture2D) clay.ClayArray(clay.RenderCommand) {
     clay.beginLayout();
-    clay.UI(&.{
+    if (clay.OPEN(&.{
         .ID("OuterContainer"),
         .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .gap = 16 }),
         .rectangle(.{ .color = white }),
-    });
-    {
+    })) {
         defer clay.CLOSE();
-
-        clay.UI(&.{
+        if (clay.OPEN(&.{
             .ID("SideBar"),
             .layout(.{
                 .direction = .TOP_TO_BOTTOM,
@@ -152,34 +147,33 @@ fn createLayout(profile_picture: *const rl.Texture2D) clay.ClayArray(clay.Render
                 .gap = 16,
             }),
             .rectangle(.{ .color = light_grey }),
-        });
-        {
+        })) {
             defer clay.CLOSE();
-            clay.UI(&.{
+            if (clay.OPEN(&.{
                 .ID("ProfilePictureOuter"),
                 .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .alignment = .{ .x = .LEFT, .y = .CENTER }, .gap = 16 }),
                 .rectangle(.{ .color = red }),
-            });
-            {
+            })) {
                 defer clay.CLOSE();
-                clay.UI(&.{
+                clay.singleElem(&.{
                     .ID("ProfilePicture"),
                     .layout(.{ .sizing = .{ .h = .fixed(60), .w = .fixed(60) } }),
                     .image(.{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(profile_picture) }),
                 });
-                clay.CLOSE();
                 clay.text("Clay - UI Library", clay.Config.text(.{ .font_size = 24, .color = light_grey }));
             }
 
-            for (0..5) |i| sidebarItemCompoment(i);
+            for (0..5) |i| sidebarItemComponent(i);
         }
 
-        clay.UI(&.{
+        if (clay.OPEN(&.{
             .ID("MainContent"),
             .layout(.{ .sizing = .grow }),
             .rectangle(.{ .color = light_grey }),
-        });
-        clay.CLOSE();
+        })) {
+            defer clay.CLOSE();
+            //...
+        }
     }
     return clay.endLayout();
 }
