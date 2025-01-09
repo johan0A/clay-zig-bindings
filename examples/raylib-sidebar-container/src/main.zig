@@ -24,7 +24,7 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
     cl.beginLayout();
     if (cl.OPEN(&.{
         .ID("OuterContainer"),
-        .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .gap = 16 }),
+        .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .child_gap = 16 }),
         .rectangle(.{ .color = white }),
     })) {
         defer cl.CLOSE();
@@ -34,15 +34,15 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
                 .direction = .TOP_TO_BOTTOM,
                 .sizing = .{ .h = .grow, .w = .fixed(300) },
                 .padding = .all(16),
-                .alignment = .{ .x = .CENTER, .y = .TOP },
-                .gap = 16,
+                .child_alignment = .{ .x = .CENTER, .y = .TOP },
+                .child_gap = 16,
             }),
             .rectangle(.{ .color = light_grey }),
         })) {
             defer cl.CLOSE();
             if (cl.OPEN(&.{
                 .ID("ProfilePictureOuter"),
-                .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .alignment = .{ .x = .LEFT, .y = .CENTER }, .gap = 16 }),
+                .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .child_alignment = .{ .x = .LEFT, .y = .CENTER }, .child_gap = 16 }),
                 .rectangle(.{ .color = red }),
             })) {
                 defer cl.CLOSE();

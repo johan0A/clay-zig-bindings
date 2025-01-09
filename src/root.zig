@@ -253,9 +253,9 @@ pub const LayoutConfig = extern struct {
     /// padding arround children
     padding: Padding = .{},
     /// gap between the children
-    gap: u16 = 0,
+    child_gap: u16 = 0,
     /// alignement of the children
-    alignment: ChildAlignment = .{},
+    child_alignment: ChildAlignment = .{},
     /// direction of the children's layout
     direction: LayoutDirection = .LEFT_TO_RIGHT,
 };

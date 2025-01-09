@@ -45,9 +45,9 @@ if (clay.OPEN(&.{ // first function call to open the scope
     .layout(.{
         .direction = .TOP_TO_BOTTOM,
         .sizing = .{ .h = .grow, .w = .fixed(300) },
-        .alignment = .{ .x = .CENTER, .y = .TOP },
         .padding = .all(16),
-        .gap = 16,
+        .child_alignment = .{ .x = .CENTER, .y = .TOP },
+        .child_gap = 16,
     }),
     .rectangle(.{ .color = light_grey }),
 })) {
@@ -135,7 +135,7 @@ fn createLayout(profile_picture: *const rl.Texture2D) clay.ClayArray(clay.Render
     clay.beginLayout();
     if (clay.OPEN(&.{
         .ID("OuterContainer"),
-        .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .gap = 16 }),
+        .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .child_gap = 16 }),
         .rectangle(.{ .color = white }),
     })) {
         defer clay.CLOSE();
@@ -145,16 +145,16 @@ fn createLayout(profile_picture: *const rl.Texture2D) clay.ClayArray(clay.Render
                 .direction = .TOP_TO_BOTTOM,
                 .sizing = .{ .h = .grow, .w = .fixed(300) },
                 .padding = .all(16),
-                .alignment = .{ .x = .CENTER, .y = .TOP },
-                .gap = 16,
+                .child_gap = 16,
+                .child_alignment = .{ .x = .CENTER, .y = .TOP },
             }),
             .rectangle(.{ .color = light_grey }),
         })) {
             defer clay.CLOSE();
             if (clay.OPEN(&.{
                 .ID("ProfilePictureOuter"),
-                .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .alignment = .{ .x = .LEFT, .y = .CENTER }, .gap = 16 }),
                 .rectangle(.{ .color = red }),
+                .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .child_alignment = .{ .x = .LEFT, .y = .CENTER }, .child_gap = 16 }),
             })) {
                 defer clay.CLOSE();
                 clay.singleElem(&.{

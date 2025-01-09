@@ -57,11 +57,11 @@ var window_width: isize = 0;
 fn LandingPageBlob(index: u32, font_size: u16, font_id: u16, color: cl.Color, image_size: f32, max_width: f32, text: []const u8, image: *rl.Texture2D) void {
     if (cl.OPEN(&.{
         .IDI("HeroBlob", index),
-        .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = max_width }) }, .padding = .all(16), .gap = 16, .alignment = .{ .y = .CENTER } }),
+        .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = max_width }) }, .padding = .all(16), .child_gap = 16, .child_alignment = .{ .y = .CENTER } }),
         .border(.outside(color, 2, 10)),
     })) {
         defer cl.CLOSE();
-        cl.SingleElem(&.{
+        cl.singleElem(&.{
             .IDI("CheckImage", index),
             .layout(.{ .sizing = .{ .w = .fixed(image_size) } }),
             .image(.{ .image_data = image, .source_dimensions = .{ .w = 128, .h = 128 } }),
@@ -75,9 +75,9 @@ fn landingPageDesktop() void {
         .ID("LandingPage1Desktop"),
         .layout(.{
             .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 70) }) },
-            .alignment = .{ .y = .CENTER },
+            .child_alignment = .{ .y = .CENTER },
             .padding = .{ .x = 50 },
-            .gap = 16,
+            .child_gap = 16,
         }),
     })) {
         defer cl.CLOSE();
@@ -86,9 +86,9 @@ fn landingPageDesktop() void {
             .layout(.{
                 .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 70) }) },
                 .direction = .TOP_TO_BOTTOM,
-                .alignment = .{ .x = .CENTER },
+                .child_alignment = .{ .x = .CENTER },
                 .padding = .all(32),
-                .gap = 32,
+                .child_gap = 32,
             }),
             .border(.{ .left = border_data, .right = border_data }),
         })) {
@@ -99,21 +99,21 @@ fn landingPageDesktop() void {
                 .ID("ClayPresentation"),
                 .layout(.{
                     .sizing = .grow,
-                    .alignment = .{ .y = .CENTER },
-                    .gap = 16,
+                    .child_alignment = .{ .y = .CENTER },
+                    .child_gap = 16,
                 }),
             })) {
                 defer cl.CLOSE();
                 if (cl.OPEN(&.{
                     .ID("LeftText"),
-                    .layout(.{ .sizing = .{ .w = .percent(0.55) }, .direction = .TOP_TO_BOTTOM, .gap = 8 }),
+                    .layout(.{ .sizing = .{ .w = .percent(0.55) }, .direction = .TOP_TO_BOTTOM, .child_gap = 8 }),
                 })) {
                     defer cl.CLOSE();
                     cl.text(
                         "Clay is a flex-box style UI auto layout library in C, with declarative syntax and microsecond performance.",
                         cl.Config.text(.{ .font_size = 56, .font_id = FONT_ID_TITLE_56, .color = COLOR_RED }),
                     );
-                    cl.SingleElem(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .grow, .h = .fixed(32) } }) });
+                    cl.singleElem(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .grow, .h = .fixed(32) } }) });
                     cl.text(
                         "Clay is laying out this webpage .right now!",
                         cl.Config.text(.{ .font_size = 36, .font_id = FONT_ID_BODY_36, .color = COLOR_ORANGE }),
@@ -122,7 +122,7 @@ fn landingPageDesktop() void {
 
                 if (cl.OPEN(&.{
                     .ID("HeroImageOuter"),
-                    .layout(.{ .sizing = .{ .w = .percent(0.45) }, .direction = .TOP_TO_BOTTOM, .alignment = .{ .x = .CENTER }, .gap = 16 }),
+                    .layout(.{ .sizing = .{ .w = .percent(0.45) }, .direction = .TOP_TO_BOTTOM, .child_alignment = .{ .x = .CENTER }, .child_gap = 16 }),
                 })) {
                     defer cl.CLOSE();
                     LandingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_5, 32, 480, "High performance", &checkImage5);
@@ -142,23 +142,23 @@ fn landingPageMobile() void {
         .layout(.{
             .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 70) }) },
             .direction = .TOP_TO_BOTTOM,
-            .alignment = .CENTER,
+            .child_alignment = .CENTER,
             .padding = .{ .x = 16, .y = 32 },
-            .gap = 16,
+            .child_gap = 16,
         }),
     })) {
         defer cl.CLOSE();
         LandingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_ZIG_LOGO, 64, 510, "The official Clay website recreated with zclay: clay-zig-bindings", &zig_logo_image6);
         if (cl.OPEN(&.{
             .ID("LeftText"),
-            .layout(.{ .sizing = .{ .w = .grow }, .direction = .TOP_TO_BOTTOM, .gap = 8 }),
+            .layout(.{ .sizing = .{ .w = .grow }, .direction = .TOP_TO_BOTTOM, .child_gap = 8 }),
         })) {
             defer cl.CLOSE();
             cl.text(
                 "Clay is a flex-box style UI auto layout library in C, with declarative syntax and microsecond performance.",
                 cl.Config.text(.{ .font_size = 56, .font_id = FONT_ID_TITLE_56, .color = COLOR_RED }),
             );
-            cl.SingleElem(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .grow, .h = .fixed(32) } }) });
+            cl.singleElem(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .grow, .h = .fixed(32) } }) });
             cl.text(
                 "Clay is laying out this webpage .right now!",
                 cl.Config.text(.{ .font_size = 36, .font_id = FONT_ID_BODY_36, .color = COLOR_ORANGE }),
@@ -167,7 +167,7 @@ fn landingPageMobile() void {
 
         if (cl.OPEN(&.{
             .ID("HeroImageOuter"),
-            .layout(.{ .sizing = .{ .w = .grow }, .direction = .TOP_TO_BOTTOM, .alignment = .{ .x = .CENTER }, .gap = 16 }),
+            .layout(.{ .sizing = .{ .w = .grow }, .direction = .TOP_TO_BOTTOM, .child_alignment = .{ .x = .CENTER }, .child_gap = 16 }),
         })) {
             defer cl.CLOSE();
             LandingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_5, 32, 480, "High performance", &checkImage5);
@@ -186,9 +186,9 @@ fn featureBlocks(width_sizing: cl.SizingAxis, outer_padding: u16) void {
         .layout(.{
             .direction = .TOP_TO_BOTTOM,
             .sizing = .{ .w = width_sizing },
-            .alignment = .{ .y = .CENTER },
+            .child_alignment = .{ .y = .CENTER },
             .padding = .{ .x = outer_padding, .y = 32 },
-            .gap = 8,
+            .child_gap = 8,
         }),
     })) {
         defer cl.CLOSE();
@@ -208,9 +208,9 @@ fn featureBlocks(width_sizing: cl.SizingAxis, outer_padding: u16) void {
         .layout(.{
             .direction = .TOP_TO_BOTTOM,
             .sizing = .{ .w = width_sizing },
-            .alignment = .{ .y = .CENTER },
+            .child_alignment = .{ .y = .CENTER },
             .padding = .{ .x = outer_padding, .y = 32 },
-            .gap = 8,
+            .child_gap = 8,
         }),
     })) {
         defer cl.CLOSE();
@@ -225,7 +225,7 @@ fn featureBlocksDesktop() void {
         .ID("FeatureBlocksOuter"),
         .layout(.{
             .sizing = .{ .w = .grow },
-            .alignment = .{ .y = .CENTER },
+            .child_alignment = .{ .y = .CENTER },
         }),
         .border(.{ .between_children = .{ .width = 2, .color = COLOR_RED } }),
     })) {
@@ -249,10 +249,10 @@ fn featureBlocksMobile() void {
 }
 
 fn declarativeSyntaxPage(title_text_config: cl.TextElementConfig, width_sizing: cl.SizingAxis) void {
-    if (cl.OPEN(&.{ .ID("SyntaxPageLeftText"), .layout(.{ .sizing = .{ .w = width_sizing }, .direction = .TOP_TO_BOTTOM, .gap = 8 }) })) {
+    if (cl.OPEN(&.{ .ID("SyntaxPageLeftText"), .layout(.{ .sizing = .{ .w = width_sizing }, .direction = .TOP_TO_BOTTOM, .child_gap = 8 }) })) {
         defer cl.CLOSE();
         cl.text("Declarative Syntax", .text(title_text_config));
-        cl.SingleElem(&.{
+        cl.singleElem(&.{
             .ID("SyntaxSpacer"),
             .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 16 }) } }),
         });
@@ -261,9 +261,9 @@ fn declarativeSyntaxPage(title_text_config: cl.TextElementConfig, width_sizing: 
         cl.text("Mix elements with standard C code like loops, conditionals and functions.", text_conf);
         cl.text("Create your own library of re-usable components from UI primitives like text, images and rectangles.", text_conf);
     }
-    if (cl.OPEN(&.{ .ID("SyntaxPageRightImageOuter"), .layout(.{ .sizing = .{ .w = width_sizing }, .alignment = .{ .x = .CENTER } }) })) {
+    if (cl.OPEN(&.{ .ID("SyntaxPageRightImageOuter"), .layout(.{ .sizing = .{ .w = width_sizing }, .child_alignment = .{ .x = .CENTER } }) })) {
         defer cl.CLOSE();
-        cl.SingleElem(&.{
+        cl.singleElem(&.{
             .ID("SyntaxPageRightImage"),
             .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 568 }) } }),
             .image(.{ .image_data = &syntaxImage, .source_dimensions = .{ .h = 1136, .w = 1194 } }),
@@ -274,12 +274,12 @@ fn declarativeSyntaxPage(title_text_config: cl.TextElementConfig, width_sizing: 
 fn declarativeSyntaxPageDesktop() void {
     if (cl.OPEN(&.{
         .ID("SyntaxPageDesktop"),
-        .layout(.{ .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) }, .alignment = .{ .y = .CENTER }, .padding = .{ .x = 50 } }),
+        .layout(.{ .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) }, .child_alignment = .{ .y = .CENTER }, .padding = .{ .x = 50 } }),
     })) {
         defer cl.CLOSE();
         if (cl.OPEN(&.{
             .ID("SyntaxPage"),
-            .layout(.{ .sizing = .{ .w = .grow, .h = .grow }, .alignment = .{ .y = .CENTER }, .padding = .all(32), .gap = 32 }),
+            .layout(.{ .sizing = .{ .w = .grow, .h = .grow }, .child_alignment = .{ .y = .CENTER }, .padding = .all(32), .child_gap = 32 }),
             .border(.{ .left = .{ .width = 2, .color = COLOR_RED }, .right = .{ .width = 2, .color = COLOR_RED } }),
         })) {
             defer cl.CLOSE();
@@ -294,9 +294,9 @@ fn declarativeSyntaxPageMobile() void {
         .layout(.{
             .direction = .TOP_TO_BOTTOM,
             .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) },
-            .alignment = .CENTER,
+            .child_alignment = .CENTER,
             .padding = .{ .x = 16, .y = 32 },
-            .gap = 16,
+            .child_gap = 16,
         }),
     })) {
         defer cl.CLOSE();
@@ -311,10 +311,10 @@ fn colorLerp(a: cl.Color, b: cl.Color, amount: f32) cl.Color {
 const LOREM_IPSUM_TEXT = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 
 fn highPerformancePage(lerp_value: f32, title_text_tonfig: cl.TextElementConfig, width_sizing: cl.SizingAxis) void {
-    if (cl.OPEN(&.{ .ID("PerformanceLeftText"), .layout(.{ .sizing = .{ .w = width_sizing }, .direction = .TOP_TO_BOTTOM, .gap = 8 }) })) {
+    if (cl.OPEN(&.{ .ID("PerformanceLeftText"), .layout(.{ .sizing = .{ .w = width_sizing }, .direction = .TOP_TO_BOTTOM, .child_gap = 8 }) })) {
         defer cl.CLOSE();
         cl.text("High Performance", .text(title_text_tonfig));
-        cl.SingleElem(&.{ .ID("PerformanceSyntaxSpacer"), .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 16 }) } }) });
+        cl.singleElem(&.{ .ID("PerformanceSyntaxSpacer"), .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 16 }) } }) });
         cl.text(
             "Fast enough to recompute your entire UI every frame.",
             .text(.{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_LIGHT }),
@@ -328,7 +328,7 @@ fn highPerformancePage(lerp_value: f32, title_text_tonfig: cl.TextElementConfig,
             .text(.{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_LIGHT }),
         );
     }
-    if (cl.OPEN(&.{ .ID("PerformanceRightImageOuter"), .layout(.{ .sizing = .{ .w = width_sizing }, .alignment = .{ .x = .CENTER } }) })) {
+    if (cl.OPEN(&.{ .ID("PerformanceRightImageOuter"), .layout(.{ .sizing = .{ .w = width_sizing }, .child_alignment = .{ .x = .CENTER } }) })) {
         defer cl.CLOSE();
         if (cl.OPEN(&.{
             .ID("PerformanceRightBorder"),
@@ -338,7 +338,7 @@ fn highPerformancePage(lerp_value: f32, title_text_tonfig: cl.TextElementConfig,
             defer cl.CLOSE();
             if (cl.OPEN(&.{
                 .ID("AnimationDemoContainerLeft"),
-                .layout(.{ .sizing = .{ .w = .percent(0.35 + 0.3 * lerp_value), .h = .grow }, .alignment = .{ .y = .CENTER }, .padding = .all(16) }),
+                .layout(.{ .sizing = .{ .w = .percent(0.35 + 0.3 * lerp_value), .h = .grow }, .child_alignment = .{ .y = .CENTER }, .padding = .all(16) }),
                 .rectangle(.{ .color = colorLerp(COLOR_RED, COLOR_ORANGE, lerp_value) }),
             })) {
                 defer cl.CLOSE();
@@ -346,7 +346,7 @@ fn highPerformancePage(lerp_value: f32, title_text_tonfig: cl.TextElementConfig,
             }
             if (cl.OPEN(&.{
                 .ID("AnimationDemoContainerRight"),
-                .layout(.{ .sizing = .{ .w = .grow, .h = .grow }, .alignment = .{ .y = .CENTER }, .padding = .all(16) }),
+                .layout(.{ .sizing = .{ .w = .grow, .h = .grow }, .child_alignment = .{ .y = .CENTER }, .padding = .all(16) }),
                 .rectangle(.{ .color = colorLerp(COLOR_ORANGE, COLOR_RED, lerp_value) }),
             })) {
                 defer cl.CLOSE();
@@ -361,9 +361,9 @@ fn highPerformancePageDesktop(lerp_value: f32) void {
         .ID("PerformanceDesktop"),
         .layout(.{
             .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) },
-            .alignment = .{ .y = .CENTER },
+            .child_alignment = .{ .y = .CENTER },
             .padding = .{ .x = 82, .y = 32 },
-            .gap = 64,
+            .child_gap = 64,
         }),
         .rectangle(.{ .color = COLOR_RED }),
     })) {
@@ -379,9 +379,9 @@ fn highPerformancePageMobile(lerp_value: f32) void {
             .{
                 .direction = .TOP_TO_BOTTOM,
                 .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) },
-                .alignment = .CENTER,
+                .child_alignment = .CENTER,
                 .padding = .{ .x = 16, .y = 32 },
-                .gap = 32,
+                .child_gap = 32,
             },
         ),
         .rectangle(.{ .color = COLOR_RED }),
@@ -416,10 +416,10 @@ fn rendererButtonInactive(index: u32, text: []const u8) void {
 }
 
 fn rendererPage(title_text_config: cl.TextElementConfig, width_sizing: cl.SizingAxis) void {
-    if (cl.OPEN(&.{ .ID("RendererLeftText"), .layout(.{ .sizing = .{ .w = width_sizing }, .direction = .TOP_TO_BOTTOM, .gap = 8 }) })) {
+    if (cl.OPEN(&.{ .ID("RendererLeftText"), .layout(.{ .sizing = .{ .w = width_sizing }, .direction = .TOP_TO_BOTTOM, .child_gap = 8 }) })) {
         defer cl.CLOSE();
         cl.text("Renderer & Platform Agnostic", .text(title_text_config));
-        cl.SingleElem(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 16 }) } }) });
+        cl.singleElem(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 16 }) } }) });
         cl.text(
             "Clay outputs a sorted array of primitive render commands, such as RECTANGLE, TEXT or IMAGE.",
             .text(.{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_RED }),
@@ -435,11 +435,11 @@ fn rendererPage(title_text_config: cl.TextElementConfig, width_sizing: cl.Sizing
     }
     if (cl.OPEN(&.{
         .ID("RendererRightText"),
-        .layout(.{ .sizing = .{ .w = width_sizing }, .alignment = .{ .x = .CENTER }, .direction = .TOP_TO_BOTTOM, .gap = 16 }),
+        .layout(.{ .sizing = .{ .w = width_sizing }, .child_alignment = .{ .x = .CENTER }, .direction = .TOP_TO_BOTTOM, .child_gap = 16 }),
     })) {
         defer cl.CLOSE();
         cl.text("Try changing renderer!", .text(.{ .font_size = 36, .font_id = FONT_ID_BODY_36, .color = COLOR_ORANGE }));
-        cl.SingleElem(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 32 }) } }) });
+        cl.singleElem(&.{ .ID("Spacer"), .layout(.{ .sizing = .{ .w = .growMinMax(.{ .max = 32 }) } }) });
         rendererButtonActive("Raylib Renderer");
     }
 }
@@ -449,14 +449,14 @@ fn rendererPageDesktop() void {
         .ID("RendererPageDesktop"),
         .layout(.{
             .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) },
-            .alignment = .{ .y = .CENTER },
+            .child_alignment = .{ .y = .CENTER },
             .padding = .{ .x = 50 },
         }),
     })) {
         defer cl.CLOSE();
         if (cl.OPEN(&.{
             .ID("RendererPage"),
-            .layout(.{ .sizing = .grow, .alignment = .{ .y = .CENTER }, .padding = .all(32), .gap = 32 }),
+            .layout(.{ .sizing = .grow, .child_alignment = .{ .y = .CENTER }, .padding = .all(32), .child_gap = 32 }),
             .border(.{ .left = .{ .width = 2, .color = COLOR_RED }, .right = .{ .width = 2, .color = COLOR_RED } }),
         })) {
             defer cl.CLOSE();
@@ -472,9 +472,9 @@ fn rendererPageMobile() void {
             .{
                 .direction = .TOP_TO_BOTTOM,
                 .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) },
-                .alignment = .CENTER,
+                .child_alignment = .CENTER,
                 .padding = .{ .x = 16, .y = 32 },
-                .gap = 32,
+                .child_gap = 32,
             },
         ),
         .rectangle(.{ .color = COLOR_LIGHT }),
@@ -498,9 +498,9 @@ fn createLayout(lerp_value: f32) cl.ClayArray(cl.RenderCommand) {
             .ID("Header"),
             .layout(.{
                 .sizing = .{ .h = .fixed(50), .w = .grow },
-                .alignment = .{ .y = .CENTER },
+                .child_alignment = .{ .y = .CENTER },
                 .padding = .{ .x = 32 },
-                .gap = 24,
+                .child_gap = 24,
             }),
         })) {
             defer cl.CLOSE();
@@ -509,7 +509,7 @@ fn createLayout(lerp_value: f32) cl.ClayArray(cl.RenderCommand) {
                 .font_size = 24,
                 .color = .{ 61, 26, 5, 255 },
             }));
-            cl.SingleElem(&.{ .ID("HeaderSpacer"), .layout(.{ .sizing = .{ .w = .grow } }) });
+            cl.singleElem(&.{ .ID("HeaderSpacer"), .layout(.{ .sizing = .{ .w = .grow } }) });
 
             if (!mobileScreen) {
                 if (cl.OPEN(&.{ .ID("LinkExamplesInner"), .layout(.{}), .rectangle(.{ .color = .{ 0, 0, 0, 0 } }) })) {
@@ -539,7 +539,7 @@ fn createLayout(lerp_value: f32) cl.ClayArray(cl.RenderCommand) {
             }
         }
         inline for (COLORS_TOP_BORDER, 0..) |color, i| {
-            cl.SingleElem(&.{
+            cl.singleElem(&.{
                 .ID("TopBorder" ++ .{i}),
                 .layout(.{ .sizing = .{ .h = .fixed(4), .w = .grow } }),
                 .rectangle(.{ .color = color }),
