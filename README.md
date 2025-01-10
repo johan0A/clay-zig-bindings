@@ -28,8 +28,8 @@ CLAY(
     CLAY_LAYOUT({ 
         .layoutDirection = CLAY_TOP_TO_BOTTOM, 
         .sizing = { .height = CLAY_SIZING_GROW(), .width = CLAY_SIZING_FIXED(300) }, 
-        .childAlignment = { .x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_TOP  },
         .padding = {16, 16},
+        .childAlignment = { .x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_TOP  },
         .childGap = 16,
     }),
     CLAY_RECTANGLE({ .color = COLOR_LIGHT })
