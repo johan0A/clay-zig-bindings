@@ -404,27 +404,56 @@ pub const renderCommandArrayGet = cdefs.Clay_RenderCommandArray_Get;
 pub const setDebugModeEnabled = cdefs.Clay_SetDebugModeEnabled;
 pub const hashString = cdefs.Clay__HashString;
 
-threadlocal var nesting_level: i32 = 0;
-
-pub fn OPEN(configs: []const Config) bool {
+pub inline fn UI(configs: []const Config) fn (void) void {
+    std.debug.print("-> OPEN ELEMENT\n", .{});
     cdefs.Clay__OpenElement();
-    nesting_level += 1;
     for (configs) |config| {
         switch (config) {
-            .Layout => |layoutConf| cdefs.Clay__AttachLayoutConfig(layoutConf),
+            .Layout => |layoutConf| {
+                std.debug.print("LAYOUT CONF: {}\n", .{layoutConf});
+                cdefs.Clay__AttachLayoutConfig(layoutConf);
+            },
             .id => |id| cdefs.Clay__AttachId(id),
-            inline else => |elem_config| cdefs.Clay__AttachElementConfig(@ptrCast(elem_config), config),
+            inline else => |elem_config| {
+                std.debug.print("elem_config CONF: {}\n", .{elem_config});
+                cdefs.Clay__AttachElementConfig(@ptrCast(elem_config), config);
+            },
         }
     }
+    std.debug.print("-> POST ELEMENT\n", .{});
+    cdefs.Clay__ElementPostConfiguration();
+    return struct {
+        fn f(_: void) void {
+            std.time.sleep(1000);
+            std.debug.print("-> CLOSE ELEMENT\n", .{});
+            cdefs.Clay__CloseElement();
+        }
+    }.f;
+}
+
+pub fn OPEN(configs: []const Config) bool {
+    std.debug.print("-> OPEN ELEMENT\n", .{});
+    cdefs.Clay__OpenElement();
+    for (configs) |config| {
+        switch (config) {
+            .Layout => |layoutConf| {
+                std.debug.print("LAYOUT CONF: {}\n", .{layoutConf});
+                cdefs.Clay__AttachLayoutConfig(layoutConf);
+            },
+            .id => |id| cdefs.Clay__AttachId(id),
+            inline else => |elem_config| {
+                std.debug.print("elem_config CONF: {}\n", .{elem_config});
+                cdefs.Clay__AttachElementConfig(@ptrCast(elem_config), config);
+            },
+        }
+    }
+    std.debug.print("-> POST ELEMENT\n", .{});
     cdefs.Clay__ElementPostConfiguration();
     return true;
 }
 
 pub fn CLOSE() void {
-    nesting_level -= 1;
-    if (nesting_level < 0) {
-        std.debug.panic("clay.CLOSE() was called but no clay element is currently open", .{});
-    }
+    std.debug.print("-> CLOSE ELEMENT\n", .{});
     cdefs.Clay__CloseElement();
 }
 
@@ -434,12 +463,6 @@ pub fn singleElem(configs: []const Config) void {
 }
 
 pub fn endLayout() ClayArray(RenderCommand) {
-    if (nesting_level > 0) {
-        std.debug.panic(
-            \\clay.endLayout() was called but {} clay elements are still currently open.
-            \\Make sure every call to clay.OPEN() is matched with a call to clay.CLOSE() before the end of the layout.
-        , .{nesting_level});
-    }
     return cdefs.Clay_EndLayout();
 }
 
@@ -467,6 +490,7 @@ pub fn makeClayString(string: []const u8) String {
 }
 
 pub fn text(string: []const u8, config: Config) void {
+    // std.debug.print("TEXT 2 conf: {}\n", .{config.Text});
     cdefs.Clay__OpenTextElement(makeClayString(string), config.Text);
 }
 
