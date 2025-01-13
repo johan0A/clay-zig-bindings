@@ -12,11 +12,9 @@ This repository contains Zig bindings for the [clay UI layout library](https://g
 
 This README is abbreviated and applies to using clay in Zig specifically: If you haven't taken a look at the [full documentation for clay](https://github.com/nicbarker/clay/blob/main/README.md), it's recommended that you take a look there first to familiarise yourself with the general concepts.
 
-The **most notable difference** between the C API and the Zig bindings is that opening and closing the scope for declaring child elements must be done "manually" using 2 function calls.
-
-other differences include:
+Some differences between the C API and the Zig bindings include:
  - minor naming changes
- - ability to initialize a parameter by calling a function that is part of its type's namespace for example `.fixed()` or `.Layout()`
+ - ability to initialize a parameter by calling a function that is part of its type's namespace for example `.fixed()` or `.layout()`
  - ability to initialize a parameter by using a public constant that is part of its type's namespace for example `.grow`
  - clay.singleElem() is available to create a clay element without creating a scope
 
@@ -28,8 +26,8 @@ CLAY(
     CLAY_LAYOUT({ 
         .layoutDirection = CLAY_TOP_TO_BOTTOM, 
         .sizing = { .height = CLAY_SIZING_GROW(), .width = CLAY_SIZING_FIXED(300) }, 
-        .childAlignment = { .x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_TOP  },
         .padding = {16, 16},
+        .childAlignment = { .x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_TOP  },
         .childGap = 16,
     }),
     CLAY_RECTANGLE({ .color = COLOR_LIGHT })
