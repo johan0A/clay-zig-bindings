@@ -12,23 +12,22 @@ const sidebar_item_layout: cl.LayoutConfig = .{ .sizing = .{ .w = .grow, .h = .f
 
 // Re-useable components are just normal functions
 fn sidebarItemComponent(index: usize) void {
-    cl.singleElem(&.{
+    cl.UI(&.{
         .IDI("SidebarBlob", @intCast(index)),
         .layout(sidebar_item_layout),
         .rectangle(.{ .color = orange }),
-    });
+    })({});
 }
 
 // An example function to begin the "root" of your layout tree
 fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderCommand) {
     cl.beginLayout();
-    if (cl.OPEN(&.{
+    cl.UI(&.{
         .ID("OuterContainer"),
         .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .child_gap = 16 }),
         .rectangle(.{ .color = white }),
-    })) {
-        defer cl.CLOSE();
-        if (cl.OPEN(&.{
+    })({
+        cl.UI(&.{
             .ID("SideBar"),
             .layout(.{
                 .direction = .TOP_TO_BOTTOM,
@@ -38,34 +37,31 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
                 .child_gap = 16,
             }),
             .rectangle(.{ .color = light_grey }),
-        })) {
-            defer cl.CLOSE();
-            if (cl.OPEN(&.{
+        })({
+            cl.UI(&.{
                 .ID("ProfilePictureOuter"),
                 .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .child_alignment = .{ .x = .LEFT, .y = .CENTER }, .child_gap = 16 }),
                 .rectangle(.{ .color = red }),
-            })) {
-                defer cl.CLOSE();
-                cl.singleElem(&.{
+            })({
+                cl.UI(&.{
                     .ID("ProfilePicture"),
                     .layout(.{ .sizing = .{ .h = .fixed(60), .w = .fixed(60) } }),
                     .image(.{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(profile_picture) }),
-                });
-                cl.text("Clay - UI Library", cl.Config.text(.{ .font_size = 24, .color = light_grey }));
-            }
+                })({});
+                cl.text("Clay - UI Library", .text(.{ .font_size = 24, .color = light_grey }));
+            });
 
             for (0..5) |i| sidebarItemComponent(i);
-        }
+        });
 
-        if (cl.OPEN(&.{
+        cl.UI(&.{
             .ID("MainContent"),
             .layout(.{ .sizing = .grow }),
             .rectangle(.{ .color = light_grey }),
-        })) {
-            defer cl.CLOSE();
+        })({
             //...
-        }
-    }
+        });
+    });
     return cl.endLayout();
 }
 
@@ -87,8 +83,8 @@ pub fn main() anyerror!void {
     const min_memory_size: u32 = cl.minMemorySize();
     const memory = try allocator.alloc(u8, min_memory_size);
     defer allocator.free(memory);
-    const arena: cl.Arena = cl.createArenaWithCapacityAndMemory(min_memory_size, @ptrCast(memory));
-    cl.initialize(arena, .{ .h = 1000, .w = 1000 });
+    const arena: cl.Arena = cl.createArenaWithCapacityAndMemory(memory);
+    _ = cl.initialize(arena, .{ .h = 1000, .w = 1000 }, .{});
     cl.setMeasureTextFunction(renderer.measureText);
 
     // init raylib
