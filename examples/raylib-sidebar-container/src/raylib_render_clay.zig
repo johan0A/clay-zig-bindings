@@ -20,25 +20,25 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
         const render_command = cl.renderCommandArrayGet(render_commands, @intCast(i));
         const bounding_box = render_command.bounding_box;
         switch (render_command.command_type) {
-            .None => {},
-            .Text => {
+            .none => {},
+            .text => {
                 const text = render_command.text.chars[0..@intCast(render_command.text.length)];
-                const cloned = allocator.dupeZ(c_char, text) catch unreachable;
+                const cloned = allocator.dupeZ(u8, text) catch unreachable;
                 defer allocator.free(cloned);
-                const fontToUse: rl.Font = raylib_fonts[render_command.config.text_element_config.font_id].?;
-                rl.setTextLineSpacing(render_command.config.text_element_config.line_height);
+                const fontToUse: rl.Font = raylib_fonts[render_command.config.text_config.font_id].?;
+                rl.setTextLineSpacing(render_command.config.text_config.line_height);
                 rl.drawTextEx(
                     fontToUse,
                     @ptrCast(@alignCast(cloned.ptr)),
                     rl.Vector2{ .x = bounding_box.x, .y = bounding_box.y },
-                    @floatFromInt(render_command.config.text_element_config.font_size),
-                    @floatFromInt(render_command.config.text_element_config.letter_spacing),
-                    clayColorToRaylibColor(render_command.config.text_element_config.color),
+                    @floatFromInt(render_command.config.text_config.font_size),
+                    @floatFromInt(render_command.config.text_config.letter_spacing),
+                    clayColorToRaylibColor(render_command.config.text_config.color),
                 );
             },
-            .Image => {
+            .image => {
                 const image_texture: *const rl.Texture2D = @ptrCast(
-                    @alignCast(render_command.config.image_element_config.image_data),
+                    @alignCast(render_command.config.image_config.image_data),
                 );
                 rl.drawTextureEx(
                     image_texture.*,
@@ -48,7 +48,7 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
                     rl.Color.white,
                 );
             },
-            .ScissorStart => {
+            .scissor_start => {
                 rl.beginScissorMode(
                     @intFromFloat(math.round(bounding_box.x)),
                     @intFromFloat(math.round(bounding_box.y)),
@@ -56,9 +56,9 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
                     @intFromFloat(math.round(bounding_box.height)),
                 );
             },
-            .ScissorEnd => rl.endScissorMode(),
-            .Rectangle => {
-                const config = render_command.config.rectangle_element_config;
+            .scissor_end => rl.endScissorMode(),
+            .rectangle => {
+                const config = render_command.config.rectangle_config;
                 if (config.corner_radius.top_left > 0) {
                     const radius: f32 = (config.corner_radius.top_left * 2) / @min(bounding_box.width, bounding_box.height);
                     rl.drawRectangleRounded(
@@ -82,8 +82,8 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
                     );
                 }
             },
-            .Border => {
-                const config = render_command.config.border_element_config;
+            .border => {
+                const config = render_command.config.border_config;
                 if (config.left.width > 0) {
                     rl.drawRectangle(
                         @intFromFloat(math.round(bounding_box.x)),
@@ -178,7 +178,7 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
                     );
                 }
             },
-            .Custom => {
+            .custom => {
                 // Implement custom element rendering here
             },
         }
@@ -227,6 +227,6 @@ pub fn measureText(clay_text: []const u8, config: *cl.TextElementConfig) cl.Dime
 
     return cl.Dimensions{
         .h = text_height,
-        .w = temp_text_width * scale_factor + @as(f32, @floatFromInt(temp_byte_counter - 1)) * letter_spacing,
+        .w = temp_text_width * scale_factor + (@as(f32, @floatFromInt(temp_byte_counter)) - 1) * letter_spacing,
     };
 }

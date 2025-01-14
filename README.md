@@ -3,7 +3,7 @@
 ![Screenshot from 2025-01-07 17-05-01](https://github.com/user-attachments/assets/8f38e8bf-00aa-4e16-be96-b7a0d81f4313)
 
 > [!IMPORTANT]  
-> Zig 0.14.0 or higher is required. (tested with zig 0.14.0-dev.2628+5b5c60f4)
+> Zig 0.14.0 or higher is required. (tested with zig 0.14.0-dev.2639+15fe99957)
 
 > [!NOTE]
 > This project is currently in beta.
@@ -12,9 +12,7 @@ This repository contains Zig bindings for the [clay UI layout library](https://g
 
 This README is abbreviated and applies to using clay in Zig specifically: If you haven't taken a look at the [full documentation for clay](https://github.com/nicbarker/clay/blob/main/README.md), it's recommended that you take a look there first to familiarise yourself with the general concepts.
 
-The **most notable difference** between the C API and the Zig bindings is that opening and closing the scope for declaring child elements must be done "manually" using 2 function calls.
-
-other changes include:
+Some differences between the C API and the Zig bindings include:
  - minor naming changes
  - ability to initialize a parameter by calling a function that is part of its type's namespace for example `.fixed()` or `.layout()`
  - ability to initialize a parameter by using a public constant that is part of its type's namespace for example `.grow`
@@ -40,7 +38,7 @@ CLAY(
 
 In Zig:
 ```Zig
-if (clay.OPEN(&.{ // first function call to open the scope
+clay.UI(&.{ // function call to open the scope
     .ID("SideBar"),
     .layout(.{
         .direction = .TOP_TO_BOTTOM,
@@ -50,10 +48,9 @@ if (clay.OPEN(&.{ // first function call to open the scope
         .child_gap = 16,
     }),
     .rectangle(.{ .color = light_grey }),
-})) {
-    defer clay.CLOSE(); // defered second function call to close the scope
+})({
     // Child elements here
-}
+});
 ```
 
 ## install
@@ -81,10 +78,12 @@ compile_step.root_module.addImport("zclay", zclay_dep.module("zclay"));
 2. Ask clay for how much static memory it needs using [clay.minMemorySize()](https://github.com/nicbarker/clay/blob/main/README.md#clay_minmemorysize), create an Arena for it to use with [clay.createArenaWithCapacityAndMemory(minMemorySize, memory)](https://github.com/nicbarker/clay/blob/main/README.md#clay_createarenawithcapacityandmemory), and initialize it with [clay.Initialize(arena)](https://github.com/nicbarker/clay/blob/main/README.md#clay_initialize).
 
 ```zig
-const min_memory_size: u32 = clay.minMemorySize();
+const min_memory_size: u32 = cl.minMemorySize();
 const memory = try allocator.alloc(u8, min_memory_size);
 defer allocator.free(memory);
-const arena: clay.Arena = clay.createArenaWithCapacityAndMemory(min_memory_size, @ptrCast(memory));
+const arena: cl.Arena = cl.createArenaWithCapacityAndMemory(memory);
+_ = cl.initialize(arena, .{ .h = 1000, .w = 1000 }, .{});
+cl.setMeasureTextFunction(renderer.measureText);
 ```
 
 3. Provide a `measureText(text, config)` function with [clay.setMeasureTextFunction(function)](https://github.com/nicbarker/clay/blob/main/README.md#clay_setmeasuretextfunction) so that clay can measure and wrap text.
@@ -113,71 +112,66 @@ clay.setPointerState(.{
 5. Call [clay.BeginLayout(screenWidth, screenHeight)](https://github.com/nicbarker/clay/blob/main/README.md#clay_beginlayout) and declare your layout using the provided functions.
 
 ```Zig
-const light_grey: clay.Color = .{ 224, 215, 210, 255 };
-const red: clay.Color = .{ 168, 66, 28, 255 };
-const orange: clay.Color = .{ 225, 138, 50, 255 };
-const white: clay.Color = .{ 250, 250, 255, 255 };
+const light_grey: cl.Color = .{ 224, 215, 210, 255 };
+const red: cl.Color = .{ 168, 66, 28, 255 };
+const orange: cl.Color = .{ 225, 138, 50, 255 };
+const white: cl.Color = .{ 250, 250, 255, 255 };
 
-// Layout config is just a struct that can be declared statically, or inline
-const sidebar_item_layout: clay.LayoutConfig = .{ .sizing = .{ .w = .grow, .h = .fixed(50) } };
+const sidebar_item_layout: cl.LayoutConfig = .{ .sizing = .{ .w = .grow, .h = .fixed(50) } };
 
 // Re-useable components are just normal functions
 fn sidebarItemComponent(index: usize) void {
-    clay.singleElem(&.{
+    cl.UI(&.{
         .IDI("SidebarBlob", @intCast(index)),
         .layout(sidebar_item_layout),
         .rectangle(.{ .color = orange }),
-    });
+    })({});
 }
 
 // An example function to begin the "root" of your layout tree
-fn createLayout(profile_picture: *const rl.Texture2D) clay.ClayArray(clay.RenderCommand) {
-    clay.beginLayout();
-    if (clay.OPEN(&.{
+fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderCommand) {
+    cl.beginLayout();
+    cl.UI(&.{
         .ID("OuterContainer"),
         .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .child_gap = 16 }),
         .rectangle(.{ .color = white }),
-    })) {
-        defer clay.CLOSE();
-        if (clay.OPEN(&.{
+    })({
+        cl.UI(&.{
             .ID("SideBar"),
             .layout(.{
                 .direction = .TOP_TO_BOTTOM,
                 .sizing = .{ .h = .grow, .w = .fixed(300) },
                 .padding = .all(16),
-                .child_gap = 16,
                 .child_alignment = .{ .x = .CENTER, .y = .TOP },
+                .child_gap = 16,
             }),
             .rectangle(.{ .color = light_grey }),
-        })) {
-            defer clay.CLOSE();
-            if (clay.OPEN(&.{
+        })({
+            cl.UI(&.{
                 .ID("ProfilePictureOuter"),
-                .rectangle(.{ .color = red }),
                 .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .child_alignment = .{ .x = .LEFT, .y = .CENTER }, .child_gap = 16 }),
-            })) {
-                defer clay.CLOSE();
-                clay.singleElem(&.{
+                .rectangle(.{ .color = red }),
+            })({
+                cl.UI(&.{
                     .ID("ProfilePicture"),
                     .layout(.{ .sizing = .{ .h = .fixed(60), .w = .fixed(60) } }),
                     .image(.{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(profile_picture) }),
-                });
-                clay.text("Clay - UI Library", clay.Config.text(.{ .font_size = 24, .color = light_grey }));
-            }
+                })({});
+                cl.text("Clay - UI Library", .text(.{ .font_size = 24, .color = light_grey }));
+            });
 
             for (0..5) |i| sidebarItemComponent(i);
-        }
+        });
 
-        if (clay.OPEN(&.{
+        cl.UI(&.{
             .ID("MainContent"),
             .layout(.{ .sizing = .grow }),
             .rectangle(.{ .color = light_grey }),
-        })) {
-            defer clay.CLOSE();
+        })({
             //...
-        }
-    }
-    return clay.endLayout();
+        });
+    });
+    return cl.endLayout();
 }
 ```
 
@@ -191,8 +185,8 @@ while (i < render_commands.length) : (i += 1) {
     const render_command = clay.renderCommandArrayGet(render_commands, @intCast(i));
     const bounding_box = render_command.bounding_box;
     switch (render_command.command_type) {
-        .None => {},
-        .Text => {
+        .none => {},
+        .text => {
         ...
 ```
 
