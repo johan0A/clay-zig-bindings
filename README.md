@@ -109,7 +109,7 @@ clay.setPointerState(.{
 }, is_left_mouse_button_down);
 ```
 
-5. Call [clay.BeginLayout(screenWidth, screenHeight)](https://github.com/nicbarker/clay/blob/main/README.md#clay_beginlayout) and declare your layout using the provided functions.
+5. Call [clay.beginLayout()](https://github.com/nicbarker/clay/blob/main/README.md#clay_beginlayout) and declare your layout using the provided functions.
 
 ```Zig
 const light_grey: cl.Color = .{ 224, 215, 210, 255 };
