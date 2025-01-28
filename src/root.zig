@@ -257,7 +257,7 @@ pub const ErrorData = extern struct {
 };
 
 pub const ErrorHandler = extern struct {
-    error_handler_function: ?*const fn (ErrorData) callconv(.c) void = null,
+    error_handler_function: ?*const fn (ErrorData) callconv(.C) void = null,
     user_data: usize = 0,
 };
 
