@@ -1,6 +1,10 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+pub extern var CLAY_LAYOUT_DEFAULT: LayoutConfig;
+pub extern var Clay__debugViewHighlightColor: Color;
+pub extern var Clay__debugViewWidth: u32;
+
 /// for direct calls to the clay c library
 pub const cdefs = struct {
     // TODO: should use @extern instead but zls does not yet support it well and that is more important
@@ -17,7 +21,7 @@ pub const cdefs = struct {
     pub extern fn Clay_GetElementId(idString: String) ElementId;
     pub extern fn Clay_GetElementIdWithIndex(idString: String, index: u32) ElementId;
     pub extern fn Clay_Hovered() bool;
-    pub extern fn Clay_OnHover(onHoverFunction: ?*const fn (ElementId, PointerData, isize) callconv(.c) void, userData: isize) void;
+    pub extern fn Clay_OnHover(onHoverFunction: ?*const fn (ElementId, PointerData, *anyopaque) callconv(.c) void, userData: *anyopaque) void;
     pub extern fn Clay_PointerOver(elementId: ElementId) bool;
     pub extern fn Clay_GetScrollContainerData(id: ElementId) ScrollContainerData;
     pub extern fn Clay_SetMeasureTextFunction(measureTextFunction: *const fn (*String, *TextElementConfig) callconv(.c) Dimensions) void;
@@ -49,10 +53,6 @@ pub const cdefs = struct {
     pub extern fn Clay__HashString(key: String, offset: u32, seed: u32) ElementId;
     pub extern fn Clay__OpenTextElement(text: String, textConfig: *TextElementConfig) void;
     pub extern fn Clay__GetParentElementId() u32;
-
-    pub extern var CLAY_LAYOUT_DEFAULT: LayoutConfig;
-    pub extern var Clay__debugViewHighlightColor: Color;
-    pub extern var Clay__debugViewWidth: u32;
 };
 
 pub const EnumBackingType = u8;
@@ -463,10 +463,10 @@ pub const Config = union(ElementConfigType) {
         return Config{ .custom_config = cdefs.Clay__StoreCustomElementConfig(config) };
     }
     pub fn ID(string: []const u8) Config {
-        return Config{ .id = hashString(makeClayString(string), 0, 0) };
+        return Config{ .id = cdefs.Clay__HashString(makeClayString(string), 0, 0) };
     }
     pub fn IDI(string: []const u8, index: u32) Config {
-        return Config{ .id = hashString(makeClayString(string), index, 0) };
+        return Config{ .id = cdefs.Clay__HashString(makeClayString(string), index, 0) };
     }
     pub fn layout(config: LayoutConfig) Config {
         return Config{ .layout_config = cdefs.Clay__StoreLayoutConfig(config) };
@@ -474,14 +474,28 @@ pub const Config = union(ElementConfigType) {
 };
 
 pub const minMemorySize = cdefs.Clay_MinMemorySize;
+pub const setPointerState = cdefs.Clay_SetPointerState;
 pub const initialize = cdefs.Clay_Initialize;
+pub const getCurrentContext = cdefs.Clay_GetCurrentContext;
+pub const setCurrentContext = cdefs.Clay_SetCurrentContext;
+pub const updateScrollContainers = cdefs.Clay_UpdateScrollContainers;
 pub const setLayoutDimensions = cdefs.Clay_SetLayoutDimensions;
 pub const beginLayout = cdefs.Clay_BeginLayout;
+pub const endLayout = cdefs.Clay_EndLayout;
+pub const hovered = cdefs.Clay_Hovered;
+pub const onHover = cdefs.Clay_OnHover;
 pub const pointerOver = cdefs.Clay_PointerOver;
 pub const getScrollContainerData = cdefs.Clay_GetScrollContainerData;
+pub const setQueryScrollOffsetFunction = cdefs.Clay_SetQueryScrollOffsetFunction;
 pub const renderCommandArrayGet = cdefs.Clay_RenderCommandArray_Get;
 pub const setDebugModeEnabled = cdefs.Clay_SetDebugModeEnabled;
-pub const hashString = cdefs.Clay__HashString;
+pub const isDebugModeEnabled = cdefs.Clay_IsDebugModeEnabled;
+pub const setCullingEnabled = cdefs.Clay_SetCullingEnabled;
+pub const getMaxElementCount = cdefs.Clay_GetMaxElementCount;
+pub const setMaxElementCount = cdefs.Clay_SetMaxElementCount;
+pub const getMaxMeasureTextCacheWordCount = cdefs.Clay_GetMaxMeasureTextCacheWordCount;
+pub const setMaxMeasureTextCacheWordCount = cdefs.Clay_SetMaxMeasureTextCacheWordCount;
+pub const resetMeasureTextCache = cdefs.Clay_ResetMeasureTextCache;
 
 pub fn createArenaWithCapacityAndMemory(buffer: []u8) Arena {
     return cdefs.Clay_CreateArenaWithCapacityAndMemory(@intCast(buffer.len), buffer.ptr);
@@ -504,18 +518,6 @@ pub inline fn UI(configs: []const Config) fn (void) void {
     }.f;
 }
 
-pub fn endLayout() ClayArray(RenderCommand) {
-    return cdefs.Clay_EndLayout();
-}
-
-pub fn setPointerState(position: Vector2, pointer_down: bool) void {
-    cdefs.Clay_SetPointerState(position, pointer_down);
-}
-
-pub fn updateScrollContainers(is_pointer_active: bool, scroll_delta: Vector2, delta_time: f32) void {
-    cdefs.Clay_UpdateScrollContainers(is_pointer_active, scroll_delta, delta_time);
-}
-
 pub fn setMeasureTextFunction(comptime measureTextFunction: fn ([]const u8, *TextElementConfig) Dimensions) void {
     cdefs.Clay_SetMeasureTextFunction(struct {
         pub fn f(string: *String, config: *TextElementConfig) callconv(.C) Dimensions {
@@ -536,11 +538,11 @@ pub fn text(string: []const u8, config: Config) void {
 }
 
 pub fn ID(string: []const u8) ElementId {
-    return hashString(makeClayString(string), 0, 0);
+    return cdefs.Clay__HashString(makeClayString(string), 0, 0);
 }
 
 pub fn IDI(string: []const u8, index: u32) ElementId {
-    return hashString(makeClayString(string), index, 0);
+    return cdefs.Clay__HashString(makeClayString(string), index, 0);
 }
 
 pub fn getElementId(string: []const u8) ElementId {

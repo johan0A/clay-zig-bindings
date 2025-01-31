@@ -53,6 +53,7 @@ const border_data = cl.BorderData{ .width = 2, .color = COLOR_RED };
 
 var window_height: isize = 0;
 var window_width: isize = 0;
+var mobile_screen: bool = false;
 
 fn landingPageBlob(index: u32, font_size: u16, font_id: u16, color: cl.Color, image_size: f32, max_width: f32, text: []const u8, image: *rl.Texture2D) void {
     cl.UI(&.{
@@ -451,7 +452,6 @@ fn rendererPageMobile() void {
 }
 
 fn createLayout(lerp_value: f32) cl.ClayArray(cl.RenderCommand) {
-    const mobileScreen = window_width < 750;
     cl.beginLayout();
 
     cl.UI(&.{
@@ -475,7 +475,7 @@ fn createLayout(lerp_value: f32) cl.ClayArray(cl.RenderCommand) {
             }));
             cl.UI(&.{ .ID("HeaderSpacer"), .layout(.{ .sizing = .{ .w = .grow } }) })({});
 
-            if (!mobileScreen) {
+            if (!mobile_screen) {
                 cl.UI(&.{ .ID("LinkExamplesInner"), .layout(.{}), .rectangle(.{ .color = .{ 0, 0, 0, 0 } }) })({
                     cl.text("Examples", .text(.{ .font_id = FONT_ID_BODY_24, .font_size = 24, .color = .{ 61, 26, 5, 255 } }));
                 });
@@ -514,7 +514,7 @@ fn createLayout(lerp_value: f32) cl.ClayArray(cl.RenderCommand) {
             .rectangle(.{ .color = COLOR_LIGHT }),
             .border(.{ .between_children = .{ .width = 2, .color = COLOR_RED } }),
         })({
-            if (!mobileScreen) {
+            if (!mobile_screen) {
                 landingPageDesktop();
                 featureBlocksDesktop();
                 declarativeSyntaxPageDesktop();
@@ -598,6 +598,7 @@ pub fn main() anyerror!void {
 
         window_width = rl.getScreenWidth();
         window_height = rl.getScreenHeight();
+        mobile_screen = (window_width - if (debug_mode_enabled) @as(i32, @intCast(cl.Clay__debugViewWidth)) else 0) < 750;
 
         const mouse_pos = rl.getMousePosition();
         cl.setPointerState(.{
