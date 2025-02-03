@@ -3,9 +3,9 @@
 ![Screenshot from 2025-01-07 17-05-01](https://github.com/user-attachments/assets/8f38e8bf-00aa-4e16-be96-b7a0d81f4313)
 
 > [!IMPORTANT]  
-> Zig 0.14.0 or higher is required. (tested with zig 0.14.0-dev.2639+15fe99957)
+> Zig 0.14.0 or higher is required. (tested with zig 0.14.0-dev.2851+b074fb7dd)
 
-> [!NOTE]
+> [!NOTE]  
 > This project is currently in beta.
 
 This repository contains Zig bindings for the [clay UI layout library](https://github.com/nicbarker/clay), as well as an example implementation of the [clay website](https://nicbarker.com/clay) in Zig.
@@ -38,7 +38,7 @@ CLAY(
 
 In Zig:
 ```Zig
-clay.UI(&.{ // function call to open the scope
+clay.UI()(&.{ // function call for creating a scope
     .ID("SideBar"),
     .layout(.{
         .direction = .TOP_TO_BOTTOM,
@@ -121,7 +121,7 @@ const sidebar_item_layout: cl.LayoutConfig = .{ .sizing = .{ .w = .grow, .h = .f
 
 // Re-useable components are just normal functions
 fn sidebarItemComponent(index: usize) void {
-    cl.UI(&.{
+    cl.UI()(&.{
         .IDI("SidebarBlob", @intCast(index)),
         .layout(sidebar_item_layout),
         .rectangle(.{ .color = orange }),
@@ -131,12 +131,12 @@ fn sidebarItemComponent(index: usize) void {
 // An example function to begin the "root" of your layout tree
 fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderCommand) {
     cl.beginLayout();
-    cl.UI(&.{
+    cl.UI()(&.{
         .ID("OuterContainer"),
         .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .child_gap = 16 }),
         .rectangle(.{ .color = white }),
     })({
-        cl.UI(&.{
+        cl.UI()(&.{
             .ID("SideBar"),
             .layout(.{
                 .direction = .TOP_TO_BOTTOM,
@@ -147,23 +147,23 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
             }),
             .rectangle(.{ .color = light_grey }),
         })({
-            cl.UI(&.{
+            cl.UI()(&.{
                 .ID("ProfilePictureOuter"),
                 .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .child_alignment = .{ .x = .LEFT, .y = .CENTER }, .child_gap = 16 }),
                 .rectangle(.{ .color = red }),
             })({
-                cl.UI(&.{
+                cl.UI()(&.{
                     .ID("ProfilePicture"),
                     .layout(.{ .sizing = .{ .h = .fixed(60), .w = .fixed(60) } }),
                     .image(.{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(profile_picture) }),
                 })({});
-                cl.text("Clay - UI Library", .text(.{ .font_size = 24, .color = light_grey }));
+                cl.text("Clay - UI Library", .{ .font_size = 24, .color = light_grey });
             });
 
             for (0..5) |i| sidebarItemComponent(i);
         });
 
-        cl.UI(&.{
+        cl.UI()(&.{
             .ID("MainContent"),
             .layout(.{ .sizing = .grow }),
             .rectangle(.{ .color = light_grey }),

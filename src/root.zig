@@ -21,7 +21,7 @@ pub const cdefs = struct {
     pub extern fn Clay_GetElementId(idString: String) ElementId;
     pub extern fn Clay_GetElementIdWithIndex(idString: String, index: u32) ElementId;
     pub extern fn Clay_Hovered() bool;
-    pub extern fn Clay_OnHover(onHoverFunction: ?*const fn (ElementId, PointerData, *anyopaque) callconv(.c) void, userData: *anyopaque) void;
+    pub extern fn Clay_OnHover(onHoverFunction: *const fn (ElementId, PointerData, *anyopaque) callconv(.c) void, userData: *anyopaque) void;
     pub extern fn Clay_PointerOver(elementId: ElementId) bool;
     pub extern fn Clay_GetScrollContainerData(id: ElementId) ScrollContainerData;
     pub extern fn Clay_SetMeasureTextFunction(measureTextFunction: *const fn (*String, *TextElementConfig) callconv(.c) Dimensions) void;
@@ -425,53 +425,65 @@ pub const ElementConfigType = enum(EnumBackingType) {
     image_config = 16,
     text_config = 32,
     custom_config = 64,
-    // zig specific enum types
-    id,
-    layout_config,
 };
 
-pub const Config = union(ElementConfigType) {
-    rectangle_config: *RectangleElementConfig,
-    border_config: *BorderElementConfig,
-    floating_config: *FloatingElementConfig,
-    scroll_config: *ScrollElementConfig,
-    image_config: *ImageElementConfig,
-    text_config: *TextElementConfig,
-    custom_config: *CustomElementConfig,
-    id: ElementId,
-    layout_config: *LayoutConfig,
-
-    pub fn rectangle(config: RectangleElementConfig) Config {
-        return Config{ .rectangle_config = cdefs.Clay__StoreRectangleElementConfig(config) };
+pub const Attach = struct {
+    pub fn rectangle(config: RectangleElementConfig) Attach {
+        cdefs.Clay__AttachElementConfig(ElementConfigUnion{ .rectangle_config = cdefs.Clay__StoreRectangleElementConfig(config) }, .rectangle_config);
+        return .{};
     }
-    pub fn border(config: BorderElementConfig) Config {
-        return Config{ .border_config = cdefs.Clay__StoreBorderElementConfig(config) };
+    pub fn border(config: BorderElementConfig) Attach {
+        cdefs.Clay__AttachElementConfig(ElementConfigUnion{ .border_config = cdefs.Clay__StoreBorderElementConfig(config) }, .border_config);
+        return .{};
     }
-    pub fn floating(config: FloatingElementConfig) Config {
-        return Config{ .floating_config = cdefs.Clay__StoreFloatingElementConfig(config) };
+    pub fn floating(config: FloatingElementConfig) Attach {
+        cdefs.Clay__AttachElementConfig(ElementConfigUnion{ .floating_config = cdefs.Clay__StoreFloatingElementConfig(config) }, .floating_config);
+        return .{};
     }
-    pub fn scroll(config: ScrollElementConfig) Config {
-        return Config{ .scroll_config = cdefs.Clay__StoreScrollElementConfig(config) };
+    pub fn scroll(config: ScrollElementConfig) Attach {
+        cdefs.Clay__AttachElementConfig(ElementConfigUnion{ .scroll_config = cdefs.Clay__StoreScrollElementConfig(config) }, .scroll_config);
+        return .{};
     }
-    pub fn image(config: ImageElementConfig) Config {
-        return Config{ .image_config = cdefs.Clay__StoreImageElementConfig(config) };
+    pub fn image(config: ImageElementConfig) Attach {
+        cdefs.Clay__AttachElementConfig(ElementConfigUnion{ .image_config = cdefs.Clay__StoreImageElementConfig(config) }, .image_config);
+        return .{};
     }
-    pub fn text(config: TextElementConfig) Config {
-        return Config{ .text_config = cdefs.Clay__StoreTextElementConfig(config) };
+    pub fn text(config: TextElementConfig) Attach {
+        cdefs.Clay__AttachElementConfig(ElementConfigUnion{ .text_config = cdefs.Clay__StoreTextElementConfig(config) }, .text_config);
+        return .{};
     }
-    pub fn custom(config: CustomElementConfig) Config {
-        return Config{ .custom_config = cdefs.Clay__StoreCustomElementConfig(config) };
+    pub fn custom(config: CustomElementConfig) Attach {
+        cdefs.Clay__AttachElementConfig(ElementConfigUnion{ .custom_config = cdefs.Clay__StoreCustomElementConfig(config) }, .custom_config);
+        return .{};
     }
-    pub fn ID(string: []const u8) Config {
-        return Config{ .id = cdefs.Clay__HashString(makeClayString(string), 0, 0) };
+    pub fn ID(string: []const u8) Attach {
+        cdefs.Clay__AttachId(cdefs.Clay__HashString(makeClayString(string), 0, 0));
+        return .{};
     }
-    pub fn IDI(string: []const u8, index: u32) Config {
-        return Config{ .id = cdefs.Clay__HashString(makeClayString(string), index, 0) };
+    pub fn IDI(string: []const u8, index: u32) Attach {
+        cdefs.Clay__AttachId(cdefs.Clay__HashString(makeClayString(string), index, 0));
+        return .{};
     }
-    pub fn layout(config: LayoutConfig) Config {
-        return Config{ .layout_config = cdefs.Clay__StoreLayoutConfig(config) };
+    pub fn layout(config: LayoutConfig) Attach {
+        cdefs.Clay__AttachLayoutConfig(cdefs.Clay__StoreLayoutConfig(config));
+        return .{};
     }
 };
+
+pub inline fn UI() fn (configs: []const Attach) callconv(.@"inline") fn (void) void {
+    cdefs.Clay__OpenElement();
+    return struct {
+        inline fn f(configs: []const Attach) fn (void) void {
+            _ = configs;
+            cdefs.Clay__ElementPostConfiguration();
+            return struct {
+                fn f(_: void) void {
+                    cdefs.Clay__CloseElement();
+                }
+            }.f;
+        }
+    }.f;
+}
 
 pub const minMemorySize = cdefs.Clay_MinMemorySize;
 pub const setPointerState = cdefs.Clay_SetPointerState;
@@ -501,23 +513,6 @@ pub fn createArenaWithCapacityAndMemory(buffer: []u8) Arena {
     return cdefs.Clay_CreateArenaWithCapacityAndMemory(@intCast(buffer.len), buffer.ptr);
 }
 
-pub inline fn UI(configs: []const Config) fn (void) void {
-    cdefs.Clay__OpenElement();
-    for (configs) |config| {
-        switch (config) {
-            .layout_config => |layoutConf| cdefs.Clay__AttachLayoutConfig(layoutConf),
-            .id => |id| cdefs.Clay__AttachId(id),
-            inline else => |elem_config, tag| cdefs.Clay__AttachElementConfig(@unionInit(ElementConfigUnion, @tagName(tag), elem_config), config),
-        }
-    }
-    cdefs.Clay__ElementPostConfiguration();
-    return struct {
-        fn f(_: void) void {
-            cdefs.Clay__CloseElement();
-        }
-    }.f;
-}
-
 pub fn setMeasureTextFunction(comptime measureTextFunction: fn ([]const u8, *TextElementConfig) Dimensions) void {
     cdefs.Clay_SetMeasureTextFunction(struct {
         pub fn f(string: *String, config: *TextElementConfig) callconv(.C) Dimensions {
@@ -533,8 +528,8 @@ pub fn makeClayString(string: []const u8) String {
     };
 }
 
-pub fn text(string: []const u8, config: Config) void {
-    cdefs.Clay__OpenTextElement(makeClayString(string), config.text_config);
+pub fn text(string: []const u8, config: TextElementConfig) void {
+    cdefs.Clay__OpenTextElement(makeClayString(string), cdefs.Clay__StoreTextElementConfig(config));
 }
 
 pub fn ID(string: []const u8) ElementId {
