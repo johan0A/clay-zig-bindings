@@ -21,11 +21,11 @@ pub const cdefs = struct {
     pub extern fn Clay_GetElementId(idString: String) ElementId;
     pub extern fn Clay_GetElementIdWithIndex(idString: String, index: u32) ElementId;
     pub extern fn Clay_Hovered() bool;
-    pub extern fn Clay_OnHover(onHoverFunction: *const fn (ElementId, PointerData, *anyopaque) callconv(.c) void, userData: *anyopaque) void;
+    pub extern fn Clay_OnHover(onHoverFunction: *const fn (ElementId, PointerData, usize) callconv(.c) void, userData: usize) void;
     pub extern fn Clay_PointerOver(elementId: ElementId) bool;
     pub extern fn Clay_GetScrollContainerData(id: ElementId) ScrollContainerData;
     pub extern fn Clay_SetMeasureTextFunction(measureTextFunction: *const fn (*String, *TextElementConfig) callconv(.c) Dimensions) void;
-    pub extern fn Clay_SetQueryScrollOffsetFunction(queryScrollOffsetFunction: ?*const fn (u32) callconv(.c) Vector2) void;
+    pub extern fn Clay_SetQueryScrollOffsetFunction(queryScrollOffsetFunction: *const fn (u32) callconv(.c) Vector2) void;
     pub extern fn Clay_RenderCommandArray_Get(array: *ClayArray(RenderCommand), index: i32) *RenderCommand;
     pub extern fn Clay_SetDebugModeEnabled(enabled: bool) void;
     pub extern fn Clay_IsDebugModeEnabled() bool;
@@ -495,7 +495,6 @@ pub const setLayoutDimensions = cdefs.Clay_SetLayoutDimensions;
 pub const beginLayout = cdefs.Clay_BeginLayout;
 pub const endLayout = cdefs.Clay_EndLayout;
 pub const hovered = cdefs.Clay_Hovered;
-pub const onHover = cdefs.Clay_OnHover;
 pub const pointerOver = cdefs.Clay_PointerOver;
 pub const getScrollContainerData = cdefs.Clay_GetScrollContainerData;
 pub const setQueryScrollOffsetFunction = cdefs.Clay_SetQueryScrollOffsetFunction;
@@ -508,6 +507,31 @@ pub const setMaxElementCount = cdefs.Clay_SetMaxElementCount;
 pub const getMaxMeasureTextCacheWordCount = cdefs.Clay_GetMaxMeasureTextCacheWordCount;
 pub const setMaxMeasureTextCacheWordCount = cdefs.Clay_SetMaxMeasureTextCacheWordCount;
 pub const resetMeasureTextCache = cdefs.Clay_ResetMeasureTextCache;
+
+/// `context` must be of same size as a pointer
+pub fn onHover(
+    context: anytype,
+    comptime onHoverFunction: fn (
+        context: @TypeOf(context),
+        element_id: ElementId,
+        pointer_data: PointerData,
+    ) void,
+) void {
+    if (@sizeOf(@TypeOf(context)) != @sizeOf(usize)) @compileError("`context` must be of same size as a pointer");
+    const ContextType = @TypeOf(context);
+    cdefs.Clay_OnHover(struct {
+        pub fn f(element_id: ElementId, pointer_data: PointerData, data: usize) callconv(.C) void {
+            onHoverFunction(
+                if (@typeInfo(ContextType) == .pointer)
+                    @ptrFromInt(@as(usize, @bitCast(data)))
+                else
+                    @bitCast(data),
+                element_id,
+                pointer_data,
+            );
+        }
+    }.f, context);
+}
 
 pub fn createArenaWithCapacityAndMemory(buffer: []u8) Arena {
     return cdefs.Clay_CreateArenaWithCapacityAndMemory(@intCast(buffer.len), buffer.ptr);
