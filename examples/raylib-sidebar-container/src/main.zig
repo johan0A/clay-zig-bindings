@@ -11,53 +11,53 @@ const white: cl.Color = .{ 250, 250, 255, 255 };
 const sidebar_item_layout: cl.LayoutConfig = .{ .sizing = .{ .w = .grow, .h = .fixed(50) } };
 
 // Re-useable components are just normal functions
-fn sidebarItemComponent(index: usize) void {
-    cl.UI()(&.{
-        .IDI("SidebarBlob", @intCast(index)),
-        .layout(sidebar_item_layout),
-        .rectangle(.{ .color = orange }),
+fn sidebarItemComponent(index: u32) void {
+    cl.UI()(.{
+        .id = .IDI("SidebarBlob", index),
+        .layout = sidebar_item_layout,
+        .background_color = orange,
     })({});
 }
 
 // An example function to begin the "root" of your layout tree
 fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderCommand) {
     cl.beginLayout();
-    cl.UI()(&.{
-        .ID("OuterContainer"),
-        .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .child_gap = 16 }),
-        .rectangle(.{ .color = white }),
+    cl.UI()(.{
+        .id = .ID("OuterContainer"),
+        .layout = .{ .direction = .left_to_right, .sizing = .grow, .padding = .all(16), .child_gap = 16 },
+        .background_color = white,
     })({
-        cl.UI()(&.{
-            .ID("SideBar"),
-            .layout(.{
-                .direction = .TOP_TO_BOTTOM,
+        cl.UI()(.{
+            .id = .ID("SideBar"),
+            .layout = .{
+                .direction = .top_to_bottom,
                 .sizing = .{ .h = .grow, .w = .fixed(300) },
                 .padding = .all(16),
-                .child_alignment = .{ .x = .CENTER, .y = .TOP },
+                .child_alignment = .{ .x = .center, .y = .top },
                 .child_gap = 16,
-            }),
-            .rectangle(.{ .color = light_grey }),
+            },
+            .background_color = light_grey,
         })({
-            cl.UI()(&.{
-                .ID("ProfilePictureOuter"),
-                .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .child_alignment = .{ .x = .LEFT, .y = .CENTER }, .child_gap = 16 }),
-                .rectangle(.{ .color = red }),
+            cl.UI()(.{
+                .id = .ID("ProfilePictureOuter"),
+                .layout = .{ .sizing = .{ .w = .grow }, .padding = .all(16), .child_alignment = .{ .x = .left, .y = .center }, .child_gap = 16 },
+                .background_color = red,
             })({
-                cl.UI()(&.{
-                    .ID("ProfilePicture"),
-                    .layout(.{ .sizing = .{ .h = .fixed(60), .w = .fixed(60) } }),
-                    .image(.{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(profile_picture) }),
+                cl.UI()(.{
+                    .id = .ID("ProfilePicture"),
+                    .layout = .{ .sizing = .{ .h = .fixed(60), .w = .fixed(60) } },
+                    .image = .{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(profile_picture) },
                 })({});
                 cl.text("Clay - UI Library", .{ .font_size = 24, .color = light_grey });
             });
 
-            for (0..5) |i| sidebarItemComponent(i);
+            for (0..5) |i| sidebarItemComponent(@intCast(i));
         });
 
-        cl.UI()(&.{
-            .ID("MainContent"),
-            .layout(.{ .sizing = .grow }),
-            .rectangle(.{ .color = light_grey }),
+        cl.UI()(.{
+            .id = .ID("MainContent"),
+            .layout = .{ .sizing = .grow },
+            .background_color = light_grey,
         })({
             //...
         });
@@ -85,7 +85,7 @@ pub fn main() anyerror!void {
     defer allocator.free(memory);
     const arena: cl.Arena = cl.createArenaWithCapacityAndMemory(memory);
     _ = cl.initialize(arena, .{ .h = 1000, .w = 1000 }, .{});
-    cl.setMeasureTextFunction(renderer.measureText);
+    cl.setMeasureTextFunction({}, renderer.measureText);
 
     // init raylib
     rl.setConfigFlags(.{

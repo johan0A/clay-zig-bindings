@@ -3,8 +3,8 @@
     .version = "0.0.0",
     .dependencies = .{
         .clay = .{
-            .url = "https://github.com/nicbarker/clay/archive/afba9f0de668c0b63fd94fbd62adb66485b9bc13.tar.gz",
-            .hash = "122032ed1ca5afaf896850aae7e1f007bf6cbc1d81bc981ed32ccbe0d932674f25f7",
+            .url = "https://github.com/nicbarker/clay/archive/7a84facec968df81b9fd7dda10cee60c9bd40beb.tar.gz",
+            .hash = "12205b854b62ef63f65c19b979782d2332d5cc88bc7069ec158d584ba8d92d389265",
         },
     },
     .paths = .{

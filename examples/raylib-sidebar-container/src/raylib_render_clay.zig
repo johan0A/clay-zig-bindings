@@ -22,23 +22,27 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
         switch (render_command.command_type) {
             .none => {},
             .text => {
-                const text = render_command.text.chars[0..@intCast(render_command.text.length)];
+                const config = render_command.render_data.text;
+                const text = config.string_contents.chars[0..@intCast(config.string_contents.length)];
+                // Raylib uses standard C strings so isn't compatible with cheap slices, we need to clone the string to append null terminator
                 const cloned = allocator.dupeZ(u8, text) catch unreachable;
                 defer allocator.free(cloned);
-                const fontToUse: rl.Font = raylib_fonts[render_command.config.text_config.font_id].?;
-                rl.setTextLineSpacing(render_command.config.text_config.line_height);
+                const fontToUse: rl.Font = raylib_fonts[config.font_id].?;
+                rl.setTextLineSpacing(config.line_height);
                 rl.drawTextEx(
                     fontToUse,
                     @ptrCast(@alignCast(cloned.ptr)),
                     rl.Vector2{ .x = bounding_box.x, .y = bounding_box.y },
-                    @floatFromInt(render_command.config.text_config.font_size),
-                    @floatFromInt(render_command.config.text_config.letter_spacing),
-                    clayColorToRaylibColor(render_command.config.text_config.color),
+                    @floatFromInt(config.font_size),
+                    @floatFromInt(config.letter_spacing),
+                    clayColorToRaylibColor(config.text_color),
                 );
             },
             .image => {
+                const config = render_command.render_data.image;
+
                 const image_texture: *const rl.Texture2D = @ptrCast(
-                    @alignCast(render_command.config.image_config.image_data),
+                    @alignCast(config.image_data),
                 );
                 rl.drawTextureEx(
                     image_texture.*,
@@ -50,15 +54,15 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
             },
             .scissor_start => {
                 rl.beginScissorMode(
-                    @intFromFloat(math.round(bounding_box.x)),
-                    @intFromFloat(math.round(bounding_box.y)),
-                    @intFromFloat(math.round(bounding_box.width)),
-                    @intFromFloat(math.round(bounding_box.height)),
+                    @intFromFloat(@round(bounding_box.x)),
+                    @intFromFloat(@round(bounding_box.y)),
+                    @intFromFloat(@round(bounding_box.width)),
+                    @intFromFloat(@round(bounding_box.height)),
                 );
             },
             .scissor_end => rl.endScissorMode(),
             .rectangle => {
-                const config = render_command.config.rectangle_config;
+                const config = render_command.render_data.rectangle;
                 if (config.corner_radius.top_left > 0) {
                     const radius: f32 = (config.corner_radius.top_left * 2) / @min(bounding_box.width, bounding_box.height);
                     rl.drawRectangleRounded(
@@ -70,7 +74,7 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
                         },
                         radius,
                         8,
-                        clayColorToRaylibColor(config.color),
+                        clayColorToRaylibColor(config.background_color),
                     );
                 } else {
                     rl.drawRectangle(
@@ -78,103 +82,106 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
                         @intFromFloat(bounding_box.y),
                         @intFromFloat(bounding_box.width),
                         @intFromFloat(bounding_box.height),
-                        clayColorToRaylibColor(config.color),
+                        clayColorToRaylibColor(config.background_color),
                     );
                 }
             },
             .border => {
-                const config = render_command.config.border_config;
-                if (config.left.width > 0) {
+                const config = render_command.render_data.border;
+                // Left border
+                if (config.width.left > 0) {
                     rl.drawRectangle(
-                        @intFromFloat(math.round(bounding_box.x)),
-                        @intFromFloat(math.round(bounding_box.y + config.corner_radius.top_left)),
-                        @intCast(config.left.width),
-                        @intFromFloat(math.round(bounding_box.height - config.corner_radius.top_left - config.corner_radius.bottom_left)),
-                        clayColorToRaylibColor(config.left.color),
+                        @intFromFloat(@round(bounding_box.x)),
+                        @intFromFloat(@round(bounding_box.y + config.corner_radius.top_left)),
+                        @intCast(config.width.left),
+                        @intFromFloat(@round(bounding_box.height - config.corner_radius.top_left - config.corner_radius.bottom_left)),
+                        clayColorToRaylibColor(config.color),
                     );
                 }
-                if (config.right.width > 0) {
+                // Right border
+                if (config.width.right > 0) {
                     rl.drawRectangle(
-                        @intFromFloat(math.round(bounding_box.x + bounding_box.width - @as(f32, @floatFromInt(config.right.width)))),
-                        @intFromFloat(math.round(bounding_box.y + config.corner_radius.top_right)),
-                        @intCast(config.right.width),
-                        @intFromFloat(math.round(bounding_box.height - config.corner_radius.top_right - config.corner_radius.bottom_right)),
-                        clayColorToRaylibColor(config.right.color),
+                        @intFromFloat(@round(bounding_box.x + bounding_box.width - @as(f32, @floatFromInt(config.width.right)))),
+                        @intFromFloat(@round(bounding_box.y + config.corner_radius.top_right)),
+                        @intCast(config.width.right),
+                        @intFromFloat(@round(bounding_box.height - config.corner_radius.top_right - config.corner_radius.bottom_right)),
+                        clayColorToRaylibColor(config.color),
                     );
                 }
-                if (config.top.width > 0) {
+                // Top border
+                if (config.width.top > 0) {
                     rl.drawRectangle(
-                        @intFromFloat(math.round(bounding_box.x + config.corner_radius.top_left)),
-                        @intFromFloat(math.round(bounding_box.y)),
-                        @intFromFloat(math.round(bounding_box.width - config.corner_radius.top_left - config.corner_radius.top_right)),
-                        @intCast(config.top.width),
-                        clayColorToRaylibColor(config.top.color),
+                        @intFromFloat(@round(bounding_box.x + config.corner_radius.top_left)),
+                        @intFromFloat(@round(bounding_box.y)),
+                        @intFromFloat(@round(bounding_box.width - config.corner_radius.top_left - config.corner_radius.top_right)),
+                        @intCast(config.width.top),
+                        clayColorToRaylibColor(config.color),
                     );
                 }
-                if (config.bottom.width > 0) {
+                // Bottom border
+                if (config.width.bottom > 0) {
                     rl.drawRectangle(
-                        @intFromFloat(math.round(bounding_box.x + config.corner_radius.bottom_left)),
-                        @intFromFloat(math.round(bounding_box.y + bounding_box.height - @as(f32, @floatFromInt(config.bottom.width)))),
-                        @intFromFloat(math.round(bounding_box.width - config.corner_radius.bottom_left - config.corner_radius.bottom_right)),
-                        @intCast(config.bottom.width),
-                        clayColorToRaylibColor(config.bottom.color),
+                        @intFromFloat(@round(bounding_box.x + config.corner_radius.bottom_left)),
+                        @intFromFloat(@round(bounding_box.y + bounding_box.height - @as(f32, @floatFromInt(config.width.bottom)))),
+                        @intFromFloat(@round(bounding_box.width - config.corner_radius.bottom_left - config.corner_radius.bottom_right)),
+                        @intCast(config.width.bottom),
+                        clayColorToRaylibColor(config.color),
                     );
                 }
-
                 if (config.corner_radius.top_left > 0) {
                     rl.drawRing(
                         rl.Vector2{
-                            .x = math.round(bounding_box.x + config.corner_radius.top_left),
-                            .y = math.round(bounding_box.y + config.corner_radius.top_left),
+                            .x = @round(bounding_box.x + config.corner_radius.top_left),
+                            .y = @round(bounding_box.y + config.corner_radius.top_left),
                         },
-                        math.round(config.corner_radius.top_left - @as(f32, @floatFromInt(config.top.width))),
+                        @round(config.corner_radius.top_left - @as(f32, @floatFromInt(config.width.top))),
                         config.corner_radius.top_left,
                         180,
                         270,
                         10,
-                        clayColorToRaylibColor(config.top.color),
+                        clayColorToRaylibColor(config.color),
                     );
                 }
                 if (config.corner_radius.top_right > 0) {
                     rl.drawRing(
                         rl.Vector2{
-                            .x = math.round(bounding_box.x + bounding_box.width - config.corner_radius.top_right),
-                            .y = math.round(bounding_box.y + config.corner_radius.top_right),
+                            .x = @round(bounding_box.x + bounding_box.width - config.corner_radius.top_right),
+                            .y = @round(bounding_box.y + config.corner_radius.top_right),
                         },
-                        math.round(config.corner_radius.top_right - @as(f32, @floatFromInt(config.top.width))),
+                        @round(config.corner_radius.top_right - @as(f32, @floatFromInt(config.width.top))),
                         config.corner_radius.top_right,
                         270,
                         360,
                         10,
-                        clayColorToRaylibColor(config.top.color),
+                        clayColorToRaylibColor(config.color),
                     );
                 }
                 if (config.corner_radius.bottom_left > 0) {
                     rl.drawRing(
                         rl.Vector2{
-                            .x = math.round(bounding_box.x + config.corner_radius.bottom_left),
-                            .y = math.round(bounding_box.y + bounding_box.height - config.corner_radius.bottom_left),
+                            .x = @round(bounding_box.x + config.corner_radius.bottom_left),
+                            .y = @round(bounding_box.y + bounding_box.height - config.corner_radius.bottom_left),
                         },
-                        math.round(config.corner_radius.bottom_left - @as(f32, @floatFromInt(config.top.width))),
+                        @round(config.corner_radius.bottom_left - @as(f32, @floatFromInt(config.width.top))),
                         config.corner_radius.bottom_left,
                         90,
                         180,
                         10,
-                        clayColorToRaylibColor(config.bottom.color),
+                        clayColorToRaylibColor(config.color),
                     );
                 }
                 if (config.corner_radius.bottom_right > 0) {
                     rl.drawRing(
                         rl.Vector2{
-                            .x = math.round(bounding_box.x + bounding_box.width - config.corner_radius.bottom_right),
-                            .y = math.round(bounding_box.y + bounding_box.height - config.corner_radius.bottom_right),
+                            .x = @round(bounding_box.x + bounding_box.width - config.corner_radius.bottom_right),
+                            .y = @round(bounding_box.y + bounding_box.height - config.corner_radius.bottom_right),
                         },
-                        math.round(config.corner_radius.bottom_right - @as(f32, @floatFromInt(config.top.width))),
+                        @round(config.corner_radius.bottom_right - @as(f32, @floatFromInt(config.width.bottom))),
                         config.corner_radius.bottom_right,
                         0.1,
                         90,
                         10,
-                        clayColorToRaylibColor(config.bottom.color),
+                        clayColorToRaylibColor(config.color),
                     );
                 }
             },
@@ -185,7 +192,7 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
     }
 }
 
-pub fn measureText(clay_text: []const u8, config: *cl.TextElementConfig) cl.Dimensions {
+pub fn measureText(clay_text: []const u8, config: *cl.TextElementConfig, _: void) cl.Dimensions {
     const font = raylib_fonts[config.font_id].?;
     const text: []const u8 = clay_text;
     const font_size: f32 = @floatFromInt(config.font_size);

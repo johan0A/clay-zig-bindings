@@ -3,7 +3,7 @@
 ![Screenshot from 2025-01-07 17-05-01](https://github.com/user-attachments/assets/8f38e8bf-00aa-4e16-be96-b7a0d81f4313)
 
 > [!IMPORTANT]  
-> Zig 0.14.0 or higher is required. (tested with zig 0.14.0-dev.2851+b074fb7dd)
+> Zig 0.14.0 or higher is required. (tested with zig 0.14.0-dev.3062+ff551374a)
 
 > [!NOTE]  
 > This project is currently in beta.
@@ -20,34 +20,32 @@ Some differences between the C API and the Zig bindings include:
 
 In C:
 ```C
-// C macro for creating a scope
-CLAY(
-    CLAY_ID("SideBar"),
-    CLAY_LAYOUT({ 
+CLAY({ // C macro for creating a scope
+    .id = CLAY_ID("SideBar"),
+    .layout = { 
         .layoutDirection = CLAY_TOP_TO_BOTTOM, 
-        .sizing = { .height = CLAY_SIZING_GROW(), .width = CLAY_SIZING_FIXED(300) }, 
-        .padding = {16, 16},
-        .childAlignment = { .x = CLAY_ALIGN_X_CENTER, .y = CLAY_ALIGN_Y_TOP  },
-        .childGap = 16,
-    }),
-    CLAY_RECTANGLE({ .color = COLOR_LIGHT })
-) {
+        .sizing = { .width = CLAY_SIZING_FIXED(300), .height = CLAY_SIZING_GROW(0) }, 
+        .padding = CLAY_PADDING_ALL(16), 
+        .childAlignment = .{ .x = CLAY_ALIGN_X_CENTER , .y = .CLAY_ALIGN_Y_TOP },
+        .childGap = 16 
+    },
+    .backgroundColor = COLOR_LIGHT 
+}){
     // Child elements here
 }
 ```
-
 In Zig:
 ```Zig
-clay.UI()(&.{ // function call for creating a scope
-    .ID("SideBar"),
-    .layout(.{
-        .direction = .TOP_TO_BOTTOM,
-        .sizing = .{ .h = .grow, .w = .fixed(300) },
+clay.UI()(.{ // function call for creating a scope
+    .id = .ID("SideBar"),
+    .layout = .{
+        .direction = .top_to_bottom,
+        .sizing = .{ .w = .fixed(300), .h = .grow },
         .padding = .all(16),
-        .child_alignment = .{ .x = .CENTER, .y = .TOP },
+        .child_alignment = .{ .x = .center, .y = .top },
         .child_gap = 16,
-    }),
-    .rectangle(.{ .color = light_grey }),
+    },
+    .background_color = light_grey,
 })({
     // Child elements here
 });
@@ -55,7 +53,7 @@ clay.UI()(&.{ // function call for creating a scope
 
 ## install
 
-1. Add `zclay` to the depency list in `build.zig.zon`: 
+1. Add `zclay` to the dependency list in `build.zig.zon`: 
 
 ```sh
 zig fetch --save https://github.com/johan0A/clay-zig-bindings/archive/<commit sha>.tar.gz
@@ -78,25 +76,25 @@ compile_step.root_module.addImport("zclay", zclay_dep.module("zclay"));
 2. Ask clay for how much static memory it needs using [clay.minMemorySize()](https://github.com/nicbarker/clay/blob/main/README.md#clay_minmemorysize), create an Arena for it to use with [clay.createArenaWithCapacityAndMemory(minMemorySize, memory)](https://github.com/nicbarker/clay/blob/main/README.md#clay_createarenawithcapacityandmemory), and initialize it with [clay.Initialize(arena)](https://github.com/nicbarker/clay/blob/main/README.md#clay_initialize).
 
 ```zig
-const min_memory_size: u32 = cl.minMemorySize();
+const min_memory_size: u32 = clay.minMemorySize();
 const memory = try allocator.alloc(u8, min_memory_size);
 defer allocator.free(memory);
-const arena: cl.Arena = cl.createArenaWithCapacityAndMemory(memory);
-_ = cl.initialize(arena, .{ .h = 1000, .w = 1000 }, .{});
-cl.setMeasureTextFunction(renderer.measureText);
+const arena: clay.Arena = clay.createArenaWithCapacityAndMemory(memory);
+_ = clay.initialize(arena, .{ .h = 1000, .w = 1000 }, .{});
+clay.setMeasureTextFunction(renderer.measureText);
 ```
 
 3. Provide a `measureText(text, config)` function with [clay.setMeasureTextFunction(function)](https://github.com/nicbarker/clay/blob/main/README.md#clay_setmeasuretextfunction) so that clay can measure and wrap text.
 
 ```zig
 // Example measure text function
-pub fn measureText(clay_text: []const u8, config: *clay.TextElementConfig) clay.Dimensions {
+pub fn measureText(clay_text: []const u8, config: *clay.TextElementConfig, user_data: void) clay.Dimensions {
     // clay.TextElementConfig contains members such as fontId, fontSize, letterSpacing etc
     // Note: clay.String.chars is not guaranteed to be null terminated
 }
 
 // Tell clay how to measure text
-clay.setMeasureTextFunction(measureText)
+clay.setMeasureTextFunction({}, measureText)
 ``` 
 
 4. **Optional** - Call [clay.setPointerPosition(pointerPosition)](https://github.com/nicbarker/clay/blob/main/README.md#clay_setpointerposition) if you want to use mouse interactions.
@@ -112,82 +110,81 @@ clay.setPointerState(.{
 5. Call [clay.beginLayout()](https://github.com/nicbarker/clay/blob/main/README.md#clay_beginlayout) and declare your layout using the provided functions.
 
 ```Zig
-const light_grey: cl.Color = .{ 224, 215, 210, 255 };
-const red: cl.Color = .{ 168, 66, 28, 255 };
-const orange: cl.Color = .{ 225, 138, 50, 255 };
-const white: cl.Color = .{ 250, 250, 255, 255 };
+const light_grey: clay.Color = .{ 224, 215, 210, 255 };
+const red: clay.Color = .{ 168, 66, 28, 255 };
+const orange: clay.Color = .{ 225, 138, 50, 255 };
+const white: clay.Color = .{ 250, 250, 255, 255 };
 
-const sidebar_item_layout: cl.LayoutConfig = .{ .sizing = .{ .w = .grow, .h = .fixed(50) } };
+const sidebar_item_layout: clay.LayoutConfig = .{ .sizing = .{ .w = .grow, .h = .fixed(50) } };
 
 // Re-useable components are just normal functions
-fn sidebarItemComponent(index: usize) void {
-    cl.UI()(&.{
-        .IDI("SidebarBlob", @intCast(index)),
-        .layout(sidebar_item_layout),
-        .rectangle(.{ .color = orange }),
+fn sidebarItemComponent(index: u32) void {
+    clay.UI()(.{
+        .id = .IDI("SidebarBlob", index),
+        .layout = sidebar_item_layout,
+        .background_color = orange,
     })({});
 }
 
 // An example function to begin the "root" of your layout tree
-fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderCommand) {
-    cl.beginLayout();
-    cl.UI()(&.{
-        .ID("OuterContainer"),
-        .layout(.{ .direction = .LEFT_TO_RIGHT, .sizing = .grow, .padding = .all(16), .child_gap = 16 }),
-        .rectangle(.{ .color = white }),
+fn createLayout(profile_picture: *const rl.Texture2D) clay.ClayArray(clay.RenderCommand) {
+    clay.beginLayout();
+    clay.UI()(.{
+        .id = .ID("OuterContainer"),
+        .layout = .{ .direction = .left_to_right, .sizing = .grow, .padding = .all(16), .child_gap = 16 },
+        .background_color = white,
     })({
-        cl.UI()(&.{
-            .ID("SideBar"),
-            .layout(.{
-                .direction = .TOP_TO_BOTTOM,
+        clay.UI()(.{
+            .id = .ID("SideBar"),
+            .layout = .{
+                .direction = .top_to_bottom,
                 .sizing = .{ .h = .grow, .w = .fixed(300) },
                 .padding = .all(16),
-                .child_alignment = .{ .x = .CENTER, .y = .TOP },
+                .child_alignment = .{ .x = .center, .y = .top },
                 .child_gap = 16,
-            }),
-            .rectangle(.{ .color = light_grey }),
+            },
+            .background_color = light_grey,
         })({
-            cl.UI()(&.{
-                .ID("ProfilePictureOuter"),
-                .layout(.{ .sizing = .{ .w = .grow }, .padding = .all(16), .child_alignment = .{ .x = .LEFT, .y = .CENTER }, .child_gap = 16 }),
-                .rectangle(.{ .color = red }),
+            clay.UI()(.{
+                .id = .ID("ProfilePictureOuter"),
+                .layout = .{ .sizing = .{ .w = .grow }, .padding = .all(16), .child_alignment = .{ .x = .left, .y = .center }, .child_gap = 16 },
+                .background_color = red,
             })({
-                cl.UI()(&.{
-                    .ID("ProfilePicture"),
-                    .layout(.{ .sizing = .{ .h = .fixed(60), .w = .fixed(60) } }),
-                    .image(.{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(profile_picture) }),
+                clay.UI()(.{
+                    .id = .ID("ProfilePicture"),
+                    .layout = .{ .sizing = .{ .h = .fixed(60), .w = .fixed(60) } },
+                    .image = .{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(profile_picture) },
                 })({});
-                cl.text("Clay - UI Library", .{ .font_size = 24, .color = light_grey });
+                clay.text("Clay - UI Library", .{ .font_size = 24, .color = light_grey });
             });
 
-            for (0..5) |i| sidebarItemComponent(i);
+            for (0..5) |i| sidebarItemComponent(@intCast(i));
         });
 
-        cl.UI()(&.{
-            .ID("MainContent"),
-            .layout(.{ .sizing = .grow }),
-            .rectangle(.{ .color = light_grey }),
+        clay.UI()(.{
+            .id = .ID("MainContent"),
+            .layout = .{ .sizing = .grow },
+            .background_color = light_grey,
         })({
             //...
         });
     });
-    return cl.endLayout();
+    return clay.endLayout();
 }
 ```
 
 6. Call [clay.endLayout()](https://github.com/nicbarker/clay/blob/main/README.md#clay_endlayout) and process the resulting [clay.RenderCommandArray](https://github.com/nicbarker/clay/blob/main/README.md#clay_rendercommandarray) in your choice of renderer.
 
 ```zig
-render_commands: clay.ClayArray(clay.RenderCommand) = clay.endLayout(window_width, window_height)
-
-var i: usize = 0;
-while (i < render_commands.length) : (i += 1) {
-    const render_command = clay.renderCommandArrayGet(render_commands, @intCast(i));
-    const bounding_box = render_command.bounding_box;
-    switch (render_command.command_type) {
-        .none => {},
-        .text => {
-        ...
+pub fn clayRaylibRender(render_commands: *clay.ClayArray(clay.RenderCommand), allocator: std.mem.Allocator) void {
+    var i: usize = 0;
+    while (i < render_commands.length) : (i += 1) {
+        const render_command = clay.renderCommandArrayGet(render_commands, @intCast(i));
+        const bounding_box = render_command.bounding_box;
+        switch (render_command.command_type) {
+            .none => {},
+            .text => {
+                ...
 ```
 
 Please see the [full C documentation for clay](https://github.com/nicbarker/clay/blob/main/README.md) for API details and the example folder in this repo. All public C functions and Macros have Zig binding equivalents, generally of the form `Clay_BeginLayout` (C) -> `clay.beginLayout` (zig)

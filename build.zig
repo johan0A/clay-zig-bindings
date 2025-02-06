@@ -6,6 +6,8 @@ pub fn build(b: *B) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const clay_lib = blk: {
+        var target_clay = target;
+        target_clay.result.os.tag = .freestanding;
         const clay_lib = b.addStaticLibrary(.{
             .name = "clay",
             .target = target,
@@ -19,6 +21,7 @@ pub fn build(b: *B) void {
                 \\#define CLAY_IMPLEMENTATION
                 \\#include<clay.h>
             ),
+            .flags = &.{"-ffreestanding"},
         });
 
         break :blk clay_lib;
