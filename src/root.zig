@@ -492,17 +492,19 @@ pub const ElementDeclaration = extern struct {
 };
 
 pub inline fn UI() fn (config: ElementDeclaration) callconv(.@"inline") fn (void) void {
-    cdefs.Clay__OpenElement();
-    return struct {
-        inline fn f(config: ElementDeclaration) fn (void) void {
-            cdefs.Clay__ConfigureOpenElement(config);
-            return struct {
-                fn f(_: void) void {
-                    cdefs.Clay__CloseElement();
-                }
-            }.f;
+    const local = struct {
+        fn CloseElement(_: void) void {
+            cdefs.Clay__CloseElement();
         }
-    }.f;
+
+        inline fn ConfigureOpenElement(config: ElementDeclaration) fn (void) void {
+            cdefs.Clay__ConfigureOpenElement(config);
+            return CloseElement;
+        }
+    };
+
+    cdefs.Clay__OpenElement();
+    return local.ConfigureOpenElement;
 }
 
 pub const getElementData = cdefs.Clay_GetElementData;
