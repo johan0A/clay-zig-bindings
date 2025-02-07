@@ -13,10 +13,10 @@ This repository contains Zig bindings for the [clay UI layout library](https://g
 This README is abbreviated and applies to using clay in Zig specifically: If you haven't taken a look at the [full documentation for clay](https://github.com/nicbarker/clay/blob/main/README.md), it's recommended that you take a look there first to familiarise yourself with the general concepts.
 
 Some differences between the C API and the Zig bindings include:
+
  - minor naming changes
  - ability to initialize a parameter by calling a function that is part of its type's namespace for example `.fixed()` or `.layout()`
  - ability to initialize a parameter by using a public constant that is part of its type's namespace for example `.grow`
- - clay.singleElem() is available to create a clay element without creating a scope
 
 In C:
 ```C
