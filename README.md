@@ -3,7 +3,7 @@
 ![Screenshot from 2025-01-07 17-05-01](https://github.com/user-attachments/assets/8f38e8bf-00aa-4e16-be96-b7a0d81f4313)
 
 > [!IMPORTANT]  
-> Zig 0.14.0 or higher is required. (tested with zig 0.14.0-dev.3062+ff551374a)
+> Zig 0.14.0 or higher is required
 
 > [!NOTE]  
 > This project is currently in beta.

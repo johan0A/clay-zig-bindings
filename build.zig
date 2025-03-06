@@ -6,12 +6,13 @@ pub fn build(b: *B) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const clay_lib = blk: {
-        var target_clay = target;
-        target_clay.result.os.tag = .freestanding;
-        const clay_lib = b.addStaticLibrary(.{
+        const clay_lib = b.addLibrary(.{
             .name = "clay",
-            .target = target,
-            .optimize = optimize,
+            .linkage = .static,
+            .root_module = b.createModule(.{
+                .target = target,
+                .optimize = optimize,
+            }),
         });
 
         const clay_dep = b.dependency("clay", .{});
@@ -32,7 +33,6 @@ pub fn build(b: *B) void {
             .root_source_file = b.path("src/root.zig"),
             .target = target,
             .optimize = optimize,
-            .link_libc = true,
         });
 
         module.linkLibrary(clay_lib);
@@ -40,10 +40,11 @@ pub fn build(b: *B) void {
 
     {
         const exe_unit_tests = b.addTest(.{
-            .root_source_file = b.path("src/root.zig"),
-            .target = target,
-            .optimize = optimize,
-            .link_libc = true,
+            .root_module = b.createModule(.{
+                .root_source_file = b.path("src/root.zig"),
+                .target = target,
+                .optimize = optimize,
+            }),
         });
 
         exe_unit_tests.linkLibrary(clay_lib);
@@ -55,10 +56,11 @@ pub fn build(b: *B) void {
 
     {
         const tests_check = b.addTest(.{
-            .root_source_file = b.path("src/root.zig"),
-            .target = target,
-            .optimize = optimize,
-            .link_libc = true,
+            .root_module = b.createModule(.{
+                .root_source_file = b.path("src/root.zig"),
+                .target = target,
+                .optimize = optimize,
+            }),
         });
 
         tests_check.linkLibrary(clay_lib);

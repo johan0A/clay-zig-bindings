@@ -1,10 +1,10 @@
 .{
-    .name = "zclay",
+    .name = .zclay,
     .version = "0.0.0",
     .dependencies = .{
         .clay = .{
-            .url = "https://github.com/nicbarker/clay/archive/7a84facec968df81b9fd7dda10cee60c9bd40beb.tar.gz",
-            .hash = "12205b854b62ef63f65c19b979782d2332d5cc88bc7069ec158d584ba8d92d389265",
+            .url = "https://github.com/nicbarker/clay/archive/refs/tags/v0.13.tar.gz",
+            .hash = "1220211ff0505143a8c4768a5b85c06e25661a51893b6b00a41493f82cab6d710043",
         },
     },
     .paths = .{
@@ -15,4 +15,5 @@
         "LICENSE",
         "README.md",
     },
+    .fingerprint = 0x4821f6a4906b3d12,
 }

@@ -93,7 +93,6 @@ fn landingPageDesktop() void {
             .border = .{ .width = .{ .left = 2, .right = 2 }, .color = COLOR_RED },
         })({
             landingPageBlob(0, 30, FONT_ID_BODY_30, COLOR_ZIG_LOGO, 64, 510, "The official Clay website recreated with zclay: clay-zig-bindings", &zig_logo_image6);
-
             cl.UI()(.{
                 .id = .ID("ClayPresentation"),
                 .layout = .{
@@ -527,18 +526,18 @@ fn createLayout(lerp_value: f32) cl.ClayArray(cl.RenderCommand) {
     return cl.endLayout();
 }
 
-fn loadFont(file_data: ?[]const u8, font_id: u16, font_size: i32) void {
-    renderer.raylib_fonts[font_id] = rl.loadFontFromMemory(".ttf", file_data, font_size * 2, null);
+fn loadFont(file_data: ?[]const u8, font_id: u16, font_size: i32) !void {
+    renderer.raylib_fonts[font_id] = try rl.loadFontFromMemory(".ttf", file_data, font_size * 2, null);
     rl.setTextureFilter(renderer.raylib_fonts[font_id].?.texture, .bilinear);
 }
 
-fn loadImage(comptime path: [:0]const u8) rl.Texture2D {
-    const texture = rl.loadTextureFromImage(rl.loadImageFromMemory(@ptrCast(std.fs.path.extension(path)), @embedFile(path)));
+fn loadImage(comptime path: [:0]const u8) !rl.Texture2D {
+    const texture = try rl.loadTextureFromImage(try rl.loadImageFromMemory(@ptrCast(std.fs.path.extension(path)), @embedFile(path)));
     rl.setTextureFilter(texture, .bilinear);
     return texture;
 }
 
-pub fn main() anyerror!void {
+pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
     // init clay
@@ -559,24 +558,24 @@ pub fn main() anyerror!void {
     rl.setTargetFPS(60);
 
     // load assets
-    loadFont(@embedFile("resources/Calistoga-Regular.ttf"), FONT_ID_TITLE_56, 56);
-    loadFont(@embedFile("resources/Calistoga-Regular.ttf"), FONT_ID_TITLE_52, 52);
-    loadFont(@embedFile("resources/Calistoga-Regular.ttf"), FONT_ID_TITLE_48, 48);
-    loadFont(@embedFile("resources/Calistoga-Regular.ttf"), FONT_ID_TITLE_36, 36);
-    loadFont(@embedFile("resources/Calistoga-Regular.ttf"), FONT_ID_TITLE_32, 32);
-    loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_36, 36);
-    loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_30, 30);
-    loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_28, 28);
-    loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_24, 24);
-    loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_16, 16);
+    try loadFont(@embedFile("resources/Calistoga-Regular.ttf"), FONT_ID_TITLE_56, 56);
+    try loadFont(@embedFile("resources/Calistoga-Regular.ttf"), FONT_ID_TITLE_52, 52);
+    try loadFont(@embedFile("resources/Calistoga-Regular.ttf"), FONT_ID_TITLE_48, 48);
+    try loadFont(@embedFile("resources/Calistoga-Regular.ttf"), FONT_ID_TITLE_36, 36);
+    try loadFont(@embedFile("resources/Calistoga-Regular.ttf"), FONT_ID_TITLE_32, 32);
+    try loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_36, 36);
+    try loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_30, 30);
+    try loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_28, 28);
+    try loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_24, 24);
+    try loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_16, 16);
 
-    syntaxImage = loadImage("resources/declarative.png");
-    checkImage1 = loadImage("resources/check_1.png");
-    checkImage2 = loadImage("resources/check_2.png");
-    checkImage3 = loadImage("resources/check_3.png");
-    checkImage4 = loadImage("resources/check_4.png");
-    checkImage5 = loadImage("resources/check_5.png");
-    zig_logo_image6 = loadImage("resources/zig-mark.png");
+    syntaxImage = try loadImage("resources/declarative.png");
+    checkImage1 = try loadImage("resources/check_1.png");
+    checkImage2 = try loadImage("resources/check_2.png");
+    checkImage3 = try loadImage("resources/check_3.png");
+    checkImage4 = try loadImage("resources/check_4.png");
+    checkImage5 = try loadImage("resources/check_5.png");
+    zig_logo_image6 = try loadImage("resources/zig-mark.png");
 
     var animation_lerp_value: f32 = -1.0;
     var debug_mode_enabled = false;
@@ -615,7 +614,7 @@ pub fn main() anyerror!void {
         var render_commands = createLayout(if (animation_lerp_value < 0) animation_lerp_value + 1 else 1 - animation_lerp_value);
 
         rl.beginDrawing();
-        renderer.clayRaylibRender(&render_commands, allocator);
+        try renderer.clayRaylibRender(&render_commands, allocator);
         rl.endDrawing();
     }
 }

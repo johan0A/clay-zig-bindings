@@ -7,10 +7,9 @@ pub extern var Clay__debugViewWidth: u32;
 
 /// for direct calls to the clay c library
 pub const cdefs = struct {
-    // TODO: should use @extern instead but zls does not yet support it well and that is more important
     pub extern fn Clay_GetElementData(id: ElementId) ElementData;
     pub extern fn Clay_MinMemorySize() u32;
-    pub extern fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, offset: ?*anyopaque) Arena;
+    pub extern fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, memory: ?*anyopaque) Arena;
     pub extern fn Clay_SetPointerState(position: Vector2, pointerDown: bool) void;
     pub extern fn Clay_Initialize(arena: Arena, layoutDimensions: Dimensions, errorHandler: ErrorHandler) *Context;
     pub extern fn Clay_GetCurrentContext() *Context;
@@ -40,8 +39,6 @@ pub const cdefs = struct {
     pub extern fn Clay__ConfigureOpenElement(config: ElementDeclaration) void;
     pub extern fn Clay__OpenElement() void;
     pub extern fn Clay__CloseElement() void;
-    pub extern fn Clay__StoreLayoutConfig(config: LayoutConfig) *LayoutConfig;
-    pub extern fn Clay__AttachId(id: ElementId) ElementId;
     pub extern fn Clay__StoreTextElementConfig(config: TextElementConfig) *TextElementConfig;
     pub extern fn Clay__HashString(key: String, offset: u32, seed: u32) ElementId;
     pub extern fn Clay__OpenTextElement(text: String, textConfig: *TextElementConfig) void;
@@ -164,6 +161,12 @@ pub const TextElementConfigWrapMode = enum(EnumBackingType) {
     none = 2,
 };
 
+pub const TextAlignment = enum(EnumBackingType) {
+    left = 0,
+    center = 1,
+    right = 2,
+};
+
 pub const TextElementConfig = extern struct {
     color: Color = .{ 0, 0, 0, 255 },
     font_id: u16 = 0,
@@ -171,6 +174,7 @@ pub const TextElementConfig = extern struct {
     letter_spacing: u16 = 0,
     line_height: u16 = 0,
     wrap_mode: TextElementConfigWrapMode = .words,
+    alignement: TextAlignment = .left,
     hash_string_contents: bool = false,
 };
 
@@ -243,7 +247,8 @@ pub const ErrorType = enum(EnumBackingType) {
     text_measurement_capacity_exceeded = 3,
     duplicate_id = 4,
     floating_container_parent_not_found = 5,
-    internal_error = 6,
+    percentage_over_1 = 6,
+    internal_error = 7,
 };
 
 pub const ErrorData = extern struct {
@@ -299,7 +304,7 @@ pub const ElementId = extern struct {
 pub const RenderCommand = extern struct {
     bounding_box: BoundingBox,
     render_data: RenderData,
-    user_data: *anyopaque,
+    user_data: ?*anyopaque,
     id: u32,
     z_index: i16,
     command_type: RenderCommandType,
@@ -422,6 +427,11 @@ pub const ImageElementConfig = extern struct {
     source_dimensions: Dimensions,
 };
 
+pub const ScrollRenderData = extern struct {
+    horizontal: bool,
+    vertical: bool,
+};
+
 pub const BorderRenderData = extern struct {
     color: Color,
     corner_radius: CornerRadius,
@@ -434,6 +444,7 @@ pub const RenderData = extern union {
     image: ImageRenderData,
     custom: CustomRenderData,
     border: BorderRenderData,
+    scroll: ScrollRenderData,
 };
 
 pub const CustomElementConfig = extern struct {
@@ -636,7 +647,7 @@ fn anytypeToAnyopaquePtr(user_data: anytype) ?*anyopaque {
     }
 }
 
-fn AnyopaquePtrToAnytype(T: type, userData: ?*anyopaque) T {
+fn anyopaquePtrToAnytype(T: type, userData: ?*anyopaque) T {
     if (T == void) {
         return {};
     } else if (@typeInfo(T) == .pointer) {

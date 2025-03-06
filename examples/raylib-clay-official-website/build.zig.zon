@@ -1,5 +1,5 @@
 .{
-    .name = .clay_sidebar_example,
+    .name = .clay_website_example,
     .version = "0.0.0",
     .dependencies = .{
         .zclay = .{
@@ -17,5 +17,5 @@
         "LICENSE",
         "README.md",
     },
-    .fingerprint = 0x934a5243274e06bb,
+    .fingerprint = 0x5a04d39cd5b4f3dd,
 }

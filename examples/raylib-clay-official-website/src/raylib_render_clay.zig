@@ -14,7 +14,7 @@ pub fn clayColorToRaylibColor(color: cl.Color) rl.Color {
 
 pub var raylib_fonts: [10]?rl.Font = .{null} ** 10;
 
-pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), allocator: std.mem.Allocator) void {
+pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), allocator: std.mem.Allocator) !void {
     var i: usize = 0;
     while (i < render_commands.length) : (i += 1) {
         const render_command = cl.renderCommandArrayGet(render_commands, @intCast(i));
@@ -25,13 +25,13 @@ pub fn clayRaylibRender(render_commands: *cl.ClayArray(cl.RenderCommand), alloca
                 const config = render_command.render_data.text;
                 const text = config.string_contents.chars[0..@intCast(config.string_contents.length)];
                 // Raylib uses standard C strings so isn't compatible with cheap slices, we need to clone the string to append null terminator
-                const cloned = allocator.dupeZ(u8, text) catch unreachable;
+                const cloned = try allocator.dupeZ(u8, text);
                 defer allocator.free(cloned);
                 const fontToUse: rl.Font = raylib_fonts[config.font_id].?;
                 rl.setTextLineSpacing(config.line_height);
                 rl.drawTextEx(
                     fontToUse,
-                    @ptrCast(@alignCast(cloned.ptr)),
+                    cloned,
                     rl.Vector2{ .x = bounding_box.x, .y = bounding_box.y },
                     @floatFromInt(config.font_size),
                     @floatFromInt(config.letter_spacing),
