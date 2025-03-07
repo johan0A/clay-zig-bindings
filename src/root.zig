@@ -560,7 +560,7 @@ pub fn onHover(
                 onHoverFunction(
                     element_id,
                     pointer_data,
-                    AnyopaquePtrToAnytype(@TypeOf(user_data), userData),
+                    anyopaquePtrToAnytype(@TypeOf(user_data), userData),
                 );
             }
         }.f,
@@ -586,7 +586,7 @@ pub fn setMeasureTextFunction(
                 return measureTextFunction(
                     string.chars[0..@intCast(string.length)],
                     config,
-                    AnyopaquePtrToAnytype(@TypeOf(user_data), userData),
+                    anyopaquePtrToAnytype(@TypeOf(user_data), userData),
                 );
             }
         }.f,
@@ -610,7 +610,7 @@ pub fn setQueryScrollOffsetFunction(
             pub fn f(scroll: u32, userData: ?*anyopaque) callconv(.c) Dimensions {
                 return queryScrollOffsetFunction(
                     scroll,
-                    AnyopaquePtrToAnytype(@TypeOf(user_data), userData),
+                    anyopaquePtrToAnytype(@TypeOf(user_data), userData),
                 );
             }
         }.f,
