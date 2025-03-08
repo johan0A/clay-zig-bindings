@@ -81,7 +81,7 @@ const memory = try allocator.alloc(u8, min_memory_size);
 defer allocator.free(memory);
 const arena: clay.Arena = clay.createArenaWithCapacityAndMemory(memory);
 _ = clay.initialize(arena, .{ .h = 1000, .w = 1000 }, .{});
-clay.setMeasureTextFunction(renderer.measureText);
+clay.setMeasureTextFunction(void, {}, renderer.measureText);
 ```
 
 3. Provide a `measureText(text, config)` function with [clay.setMeasureTextFunction(function)](https://github.com/nicbarker/clay/blob/main/README.md#clay_setmeasuretextfunction) so that clay can measure and wrap text.

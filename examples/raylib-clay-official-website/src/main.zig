@@ -546,7 +546,7 @@ pub fn main() !void {
     defer allocator.free(memory);
     const arena: cl.Arena = cl.createArenaWithCapacityAndMemory(memory);
     _ = cl.initialize(arena, .{ .h = 1000, .w = 1000 }, .{});
-    cl.setMeasureTextFunction({}, renderer.measureText);
+    cl.setMeasureTextFunction(void, {}, renderer.measureText);
 
     // init raylib
     rl.setConfigFlags(.{
