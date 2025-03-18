@@ -2,12 +2,6 @@
 
 ![Screenshot from 2025-01-07 17-05-01](https://github.com/user-attachments/assets/8f38e8bf-00aa-4e16-be96-b7a0d81f4313)
 
-> [!IMPORTANT]  
-> Zig 0.14.0 or higher is required
-
-> [!NOTE]  
-> This project is currently in beta.
-
 This repository contains Zig bindings for the [clay UI layout library](https://github.com/nicbarker/clay), as well as an example implementation of the [clay website](https://nicbarker.com/clay) in Zig.
 
 This README is abbreviated and applies to using clay in Zig specifically: If you haven't taken a look at the [full documentation for clay](https://github.com/nicbarker/clay/blob/main/README.md), it's recommended that you take a look there first to familiarise yourself with the general concepts.
@@ -51,12 +45,14 @@ clay.UI()(.{ // function call for creating a scope
 });
 ```
 
-## install
+## installation:
+
+Compatible Zig Version: `0.14.0`
 
 1. Add `zclay` to the dependency list in `build.zig.zon`: 
 
 ```sh
-zig fetch --save https://github.com/johan0A/clay-zig-bindings/archive/<commit sha>.tar.gz
+zig fetch --save git+https://github.com/johan0A/clay-zig-bindings#v0.13
 ```
 
 2. Config `build.zig`:
