@@ -52,7 +52,7 @@ Compatible Zig Version: `0.14.0`
 1. Add `zclay` to the dependency list in `build.zig.zon`: 
 
 ```sh
-zig fetch --save git+https://github.com/johan0A/clay-zig-bindings#v0.13
+zig fetch --save git+https://github.com/johan0A/clay-zig-bindings#0.13
 ```
 
 2. Config `build.zig`:
