@@ -1,10 +1,10 @@
 .{
     .name = .zclay,
-    .version = "0.0.0",
+    .version = "0.2.0",
     .dependencies = .{
         .clay = .{
-            .url = "git+https://github.com/nicbarker/clay?ref=v0.13#6d23a35d1596f139998b2994a63a1d5a982e713b",
-            .hash = "N-V-__8AAO23UQAhH_BQUUOoxHaKW4XAbiVmGlGJO2sApBST",
+            .url = "git+https://github.com/nicbarker/clay?ref=v0.14#b25a31c1a152915cd7dd6796e6592273e5a10aac",
+            .hash = "N-V-__8AALPgZwA7tLqRlkCCL7OrkEhj4xZ3y_0FxgR42t0W",
         },
     },
     .paths = .{

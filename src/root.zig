@@ -13,23 +13,25 @@ pub extern var Clay__debugViewWidth: u32;
 pub const cdefs = struct {
     pub extern fn Clay_GetElementData(id: ElementId) ElementData;
     pub extern fn Clay_MinMemorySize() u32;
-    pub extern fn Clay_CreateArenaWithCapacityAndMemory(capacity: u32, memory: ?*anyopaque) Arena;
+    pub extern fn Clay_CreateArenaWithCapacityAndMemory(capacity: usize, memory: ?*anyopaque) Arena;
     pub extern fn Clay_SetPointerState(position: Vector2, pointerDown: bool) void;
     pub extern fn Clay_Initialize(arena: Arena, layoutDimensions: Dimensions, errorHandler: ErrorHandler) *Context;
     pub extern fn Clay_GetCurrentContext() *Context;
     pub extern fn Clay_SetCurrentContext(context: *Context) void;
     pub extern fn Clay_UpdateScrollContainers(enableDragScrolling: bool, scrollDelta: Vector2, deltaTime: f32) void;
+    pub extern fn Clay_GetScrollOffset() Vector2;
     pub extern fn Clay_SetLayoutDimensions(dimensions: Dimensions) void;
     pub extern fn Clay_BeginLayout() void;
     pub extern fn Clay_EndLayout() ClayArray(RenderCommand);
     pub extern fn Clay_GetElementId(idString: String) ElementId;
     pub extern fn Clay_GetElementIdWithIndex(idString: String, index: u32) ElementId;
     pub extern fn Clay_Hovered() bool;
-    pub extern fn Clay_OnHover(onHoverFunction: *const fn (ElementId, PointerData, ?*anyopaque) callconv(.c) void, userData: ?*anyopaque) void;
+    pub extern fn Clay_OnHover(onHoverFunction: *const fn (ElementId, PointerData, ?*anyopaque) callconv(.c) void, user_data: ?*anyopaque) void;
     pub extern fn Clay_PointerOver(elementId: ElementId) bool;
+    pub extern fn Clay_GetPointerOverIds() ClayArray(ElementId);
     pub extern fn Clay_GetScrollContainerData(id: ElementId) ScrollContainerData;
-    pub extern fn Clay_SetMeasureTextFunction(measureTextFunction: *const fn (StringSlice, *TextElementConfig, ?*anyopaque) callconv(.c) Dimensions, userData: ?*anyopaque) void;
-    pub extern fn Clay_SetQueryScrollOffsetFunction(queryScrollOffsetFunction: *const fn (u32, ?*anyopaque) callconv(.c) Vector2, userData: ?*anyopaque) void;
+    pub extern fn Clay_SetMeasureTextFunction(measureTextFunction: *const fn (StringSlice, *TextElementConfig, ?*anyopaque) callconv(.c) Dimensions, user_data: ?*anyopaque) void;
+    pub extern fn Clay_SetQueryScrollOffsetFunction(queryScrollOffsetFunction: *const fn (u32, ?*anyopaque) callconv(.c) Vector2, user_data: ?*anyopaque) void;
     pub extern fn Clay_RenderCommandArray_Get(array: *ClayArray(RenderCommand), index: i32) *RenderCommand;
     pub extern fn Clay_SetDebugModeEnabled(enabled: bool) void;
     pub extern fn Clay_IsDebugModeEnabled() bool;
@@ -41,6 +43,7 @@ pub const cdefs = struct {
     pub extern fn Clay_ResetMeasureTextCache() void;
 
     pub extern fn Clay__ConfigureOpenElement(config: ElementDeclaration) void;
+    pub extern fn Clay__ConfigureOpenElementPtr(config: *ElementDeclaration) void; // TODO: investigate uses
     pub extern fn Clay__OpenElement() void;
     pub extern fn Clay__CloseElement() void;
     pub extern fn Clay__StoreTextElementConfig(config: TextElementConfig) *TextElementConfig;
@@ -53,6 +56,8 @@ pub const EnumBackingType = u8;
 
 /// Clay String representation, not guaranteed to be null terminated
 pub const String = extern struct {
+    // TODO: doc
+    is_statically_allocated: bool = false,
     /// Length of the string in bytes
     length: i32,
     /// Pointer to the character data
@@ -84,7 +89,7 @@ pub const Context = opaque {};
 /// Create using createArenaWithCapacityAndMemory() instead of manually
 pub const Arena = extern struct {
     /// Pointer to the next allocation (internal use)
-    nextAllocation: usize,
+    next_allocation: usize,
     /// Total capacity of the arena in bytes
     capacity: usize,
     /// Pointer to the arena's memory
@@ -242,6 +247,8 @@ pub const TextAlignment = enum(EnumBackingType) {
 };
 
 pub const TextElementConfig = extern struct {
+    // TODO: doc
+    user_data: ?*anyopaque = null,
     /// The RGBA color of the font to render, conventionally specified as 0-255.
     color: Color = .{ 0, 0, 0, 255 },
     /// An integer transparently passed to Clay_MeasureText to identify the font to use.
@@ -257,10 +264,6 @@ pub const TextElementConfig = extern struct {
     wrap_mode: TextElementConfigWrapMode = .words,
     /// Controls how wrapped lines of text are horizontally aligned within the outer text bounding box.
     alignement: TextAlignment = .left,
-    /// When set to true, clay will hash the entire text contents of this string as an identifier for its internal
-    /// text measurement cache, rather than just the pointer and length. This will incur significant performance cost for
-    /// long bodies of text.
-    hash_string_contents: bool = false,
 };
 
 pub const FloatingAttachPointType = enum(EnumBackingType) {
@@ -293,6 +296,13 @@ pub const FloatingAttachToElement = enum(EnumBackingType) {
     to_root = 3,
 };
 
+pub const FloatingClipToElement = enum(EnumBackingType) {
+    // TODO: doc
+    to_none = 0,
+    // TODO: doc
+    to_attached_parent = 1,
+};
+
 /// Controls how pointer events are handled by floating elements
 pub const PointerCaptureMode = enum(EnumBackingType) {
     /// (default) Captures pointer events and doesn't pass through to elements underneath
@@ -309,13 +319,15 @@ pub const FloatingElementConfig = extern struct {
     /// When using CLAY_ATTACH_TO_ELEMENT_WITH_ID, attaches to element with this ID
     parentId: u32 = 0,
     /// Z-index controls stacking order (ascending)
-    zIndex: i16 = 0,
+    z_index: i16 = 0,
     /// Controls attachment points between floating element and its parent
     attach_points: FloatingAttachPoints = .{ .element = .left_top, .parent = .left_top },
     /// Controls whether pointer events are captured or pass through to elements underneath
     pointer_capture_mode: PointerCaptureMode = .capture,
     /// Controls which element this floating element is attached to
     attach_to: FloatingAttachToElement = .to_none,
+    // TODO: doc
+    clip_to: FloatingClipToElement = .to_none,
 };
 
 pub const RenderCommandType = enum(EnumBackingType) {
@@ -518,9 +530,9 @@ pub const LayoutConfig = extern struct {
 pub fn ClayArray(comptime T: type) type {
     return extern struct {
         /// Maximum capacity of the array (not all elements may be initialized)
-        capacity: u32,
+        capacity: i32,
         /// Number of initialized elements in the array
-        length: u32,
+        length: i32,
         /// Pointer to the first element in the array
         internal_array: [*]T,
     };
@@ -595,8 +607,6 @@ pub const ImageRenderData = extern struct {
     background_color: Color,
     /// Corner rounding for the image
     corner_radius: CornerRadius,
-    /// Original dimensions of the source image
-    source_dimensions: Dimensions,
     /// Transparent pointer to image data
     image_data: ?*anyopaque,
 };
@@ -610,15 +620,18 @@ pub const CustomRenderData = extern struct {
     custom_data: ?*anyopaque,
 };
 
+pub const AspectRatioElementConfig = extern struct {
+    // TODO: doc
+    aspect_ratio: f32 = 0,
+};
+
 pub const ImageElementConfig = extern struct {
     /// Transparent pointer to image data
     image_data: ?*const anyopaque,
-    /// Original dimensions of the source image
-    source_dimensions: Dimensions,
 };
 
 /// Render command data for scissor (clipping) commands
-pub const ScrollRenderData = extern struct {
+pub const ClipRenderData = extern struct {
     /// Whether to clip/scroll horizontally
     horizontal: bool,
     /// Whether to clip/scroll vertically
@@ -640,7 +653,7 @@ pub const RenderData = extern union {
     image: ImageRenderData,
     custom: CustomRenderData,
     border: BorderRenderData,
-    scroll: ScrollRenderData,
+    scroll: ClipRenderData,
 };
 
 /// Configuration for custom elements
@@ -659,7 +672,7 @@ pub const ScrollContainerData = extern struct {
     /// Dimensions of the inner content, including parent padding
     content_dimensions: Dimensions,
     /// Original scroll config
-    config: ScrollElementConfig,
+    config: ClipElementConfig,
     /// Whether a scroll container was found with the provided ID
     found: bool,
 };
@@ -673,21 +686,23 @@ pub const ElementData = extern struct {
 };
 
 /// Controls the axes on which an element can scroll
-pub const ScrollElementConfig = extern struct {
+pub const ClipElementConfig = extern struct {
     /// Whether to enable horizontal scrolling
     horizontal: bool = false,
     /// Whether to enable vertical scrolling
     vertical: bool = false,
+    // TODO: doc
+    child_offset: Vector2 = .{ .x = 0, .y = 0 },
 };
 
 /// Shared configuration properties for multiple element types
 pub const SharedElementConfig = extern struct {
     /// Background color of the element
-    backgroundColor: Color,
+    background_color: Color,
     /// Corner rounding of the element
-    cornerRadius: CornerRadius,
+    corner_radius: CornerRadius,
     /// Transparent pointer passed to render commands
-    userData: ?*anyopaque,
+    user_data: ?*anyopaque,
 };
 
 /// Element configuration type identifiers
@@ -708,24 +723,26 @@ pub const ElementDeclaration = extern struct {
     /// Firstly, tagging an element with an ID allows you to query information about the element later, such as its mouseover state or dimensions.
     ///
     /// Secondly, IDs are visually useful when attempting to read and modify UI code, as well as when using the built-in debug tools.
-    id: ElementId = .{ .base_id = 0, .id = 0, .offset = 0, .string_id = .{ .chars = undefined, .length = 0 } },
+    id: ElementId = .{ .base_id = 0, .id = 0, .offset = 0, .string_id = .{ .chars = &.{}, .length = 0 } },
     /// Controls various settings that affect the size and position of an element, as well as the sizes and positions of any child elements.
     layout: LayoutConfig = .{},
     /// Controls the background color of the resulting element.
     /// By convention specified as 0-255, but interpretation is up to the renderer.
-    /// If no other config is specified, .backgroundColor will generate a RECTANGLE render command, otherwise it will be passed as a property to IMAGE or CUSTOM render commands.
+    /// If no other config is specified, .background_color will generate a RECTANGLE render command, otherwise it will be passed as a property to IMAGE or CUSTOM render commands.
     background_color: Color = .{ 0, 0, 0, 0 },
     /// Controls the "radius", or corner rounding of elements, including rectangles, borders and images.
     corner_radius: CornerRadius = .{},
+    // TODO: doc
+    aspect_ratio: AspectRatioElementConfig = .{},
     /// Controls settings related to image elements.
-    image: ImageElementConfig = .{ .image_data = null, .source_dimensions = .{ .h = 0, .w = 0 } },
+    image: ImageElementConfig = .{ .image_data = null },
     /// Controls whether and how an element "floats", which means it layers over the top of other elements in z order, and doesn't affect the position and size of siblings or parent elements.
     /// Note: in order to activate floating, .floating.attachTo must be set to something other than the default value.
     floating: FloatingElementConfig = .{},
     /// Used to create CUSTOM render commands, usually to render element types not supported by Clay.
     custom: CustomElementConfig = .{},
     /// Controls whether an element should clip its contents and allow scrolling rather than expanding to contain them.
-    scroll: ScrollElementConfig = .{},
+    clip: ClipElementConfig = .{},
     /// Controls settings related to element borders, and will generate BORDER render command
     border: BorderElementConfig = .{},
     /// A pointer that will be transparently passed through to resulting render command
@@ -839,7 +856,10 @@ pub const beginLayout = cdefs.Clay_BeginLayout;
 /// const commands = endLayout();
 /// // Now render the commands with your graphics API
 /// ```
-pub const endLayout = cdefs.Clay_EndLayout;
+pub fn endLayout() []RenderCommand {
+    const commands = cdefs.Clay_EndLayout();
+    return commands.internal_array[0..@intCast(commands.length)];
+}
 
 /// Gets an element ID with a numeric index - useful for loops
 /// Generally only used for dynamic strings when ElementId.IDI() can't be used
@@ -1062,6 +1082,17 @@ pub fn getElementId(string: []const u8) ElementId {
     return cdefs.Clay_GetElementId(.fromSlice(string));
 }
 
+// TODO: doc
+fn getScrollOffset() Vector2 {
+    return cdefs.Clay_GetScrollOffset();
+}
+
+// TODO: doc
+fn getPointerOverIds() []ElementId {
+    const ids = cdefs.Clay_GetPointerOverIds();
+    return ids.internal_array[0..@intCast(ids.length)];
+}
+
 fn anytypeToAnyopaquePtr(user_data: anytype) ?*anyopaque {
     if (@TypeOf(user_data) == void) {
         return null;
@@ -1072,12 +1103,12 @@ fn anytypeToAnyopaquePtr(user_data: anytype) ?*anyopaque {
     }
 }
 
-fn anyopaquePtrToAnytype(T: type, userData: ?*anyopaque) T {
+fn anyopaquePtrToAnytype(T: type, user_data: ?*anyopaque) T {
     if (T == void) {
         return {};
     } else if (@typeInfo(T) == .pointer) {
-        return @ptrCast(@alignCast(@constCast(userData)));
+        return @ptrCast(@alignCast(@constCast(user_data)));
     } else {
-        return @bitCast(@as(usize, @intFromPtr(userData)));
+        return @bitCast(@as(usize, @intFromPtr(user_data)));
     }
 }

@@ -3,16 +3,19 @@ const rl = @import("raylib");
 const cl = @import("zclay");
 const renderer = @import("raylib_render_clay.zig");
 
-var syntaxImage: rl.Texture2D = undefined;
-var checkImage1: rl.Texture2D = undefined;
-var checkImage2: rl.Texture2D = undefined;
-var checkImage3: rl.Texture2D = undefined;
-var checkImage4: rl.Texture2D = undefined;
-var checkImage5: rl.Texture2D = undefined;
+var syntax_image: rl.Texture2D = undefined;
+var check_image1: rl.Texture2D = undefined;
+var check_image2: rl.Texture2D = undefined;
+var check_image3: rl.Texture2D = undefined;
+var check_image4: rl.Texture2D = undefined;
+var check_image5: rl.Texture2D = undefined;
 var zig_logo_image6: rl.Texture2D = undefined;
 
+var window_height: isize = 0;
+var window_width: isize = 0;
+var mobile_screen: bool = false;
+
 const FONT_ID_BODY_16 = 0;
-const FONT_ID_TITLE_56 = 9;
 const FONT_ID_TITLE_52 = 1;
 const FONT_ID_TITLE_48 = 2;
 const FONT_ID_TITLE_36 = 3;
@@ -21,6 +24,7 @@ const FONT_ID_BODY_36 = 5;
 const FONT_ID_BODY_30 = 6;
 const FONT_ID_BODY_28 = 7;
 const FONT_ID_BODY_24 = 8;
+const FONT_ID_TITLE_56 = 9;
 
 const COLOR_LIGHT = cl.Color{ 244, 235, 230, 255 };
 const COLOR_LIGHT_HOVER = cl.Color{ 224, 215, 210, 255 };
@@ -51,22 +55,14 @@ const COLOR_BLOB_BORDER_5 = cl.Color{ 240, 189, 100, 255 };
 
 const border_data = cl.BorderData{ .width = 2, .color = COLOR_RED };
 
-var window_height: isize = 0;
-var window_width: isize = 0;
-var mobile_screen: bool = false;
-
-fn landingPageBlob(index: u32, font_size: u16, font_id: u16, color: cl.Color, image_size: f32, max_width: f32, text: []const u8, image: *rl.Texture2D) void {
+fn landingPageBlob(index: u32, font_size: u16, font_id: u16, color: cl.Color, image_size: f32, width: f32, text: []const u8, image: *rl.Texture2D) void {
     cl.UI()(.{
         .id = .IDI("HeroBlob", index),
-        .layout = .{ .sizing = .{ .w = .growMinMax(.{ .max = max_width }) }, .padding = .all(16), .child_gap = 16, .child_alignment = .{ .y = .center } },
+        .layout = .{ .sizing = .{ .w = .growMinMax(.{ .max = width }) }, .padding = .all(16), .child_gap = 16, .child_alignment = .{ .y = .center } },
         .border = .{ .width = .outside(2), .color = color },
         .corner_radius = .all(10),
     })({
-        cl.UI()(.{
-            .id = .IDI("CheckImage", index),
-            .layout = .{ .sizing = .{ .w = .fixed(image_size) } },
-            .image = .{ .image_data = image, .source_dimensions = .{ .w = 128, .h = 128 } },
-        })({});
+        cl.UI()(.{ .id = .IDI("CheckImage", index), .layout = .{ .sizing = .{ .w = .fixed(image_size) } }, .aspect_ratio = .{ .aspect_ratio = 128 / 128 }, .image = .{ .image_data = image } })({});
         cl.text(text, .{ .font_size = font_size, .font_id = font_id, .color = color });
     });
 }
@@ -74,57 +70,33 @@ fn landingPageBlob(index: u32, font_size: u16, font_id: u16, color: cl.Color, im
 fn landingPageDesktop() void {
     cl.UI()(.{
         .id = .ID("LandingPage1Desktop"),
-        .layout = .{
-            .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 70) }) },
-            .child_alignment = .{ .y = .center },
-            .padding = .{ .left = 50, .right = 50 },
-            .child_gap = 16,
-        },
+        .layout = .{ .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 70) }) }, .child_alignment = .{ .y = .center }, .padding = .{ .left = 50, .right = 50 } },
     })({
         cl.UI()(.{
             .id = .ID("LandingPage1"),
-            .layout = .{
-                .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 70) }) },
-                .direction = .top_to_bottom,
-                .child_alignment = .{ .x = .center },
-                .padding = .all(32),
-                .child_gap = 32,
-            },
+            .layout = .{ .sizing = .{ .w = .grow, .h = .grow }, .direction = .top_to_bottom, .child_alignment = .{ .x = .center }, .padding = .all(32), .child_gap = 32 },
             .border = .{ .width = .{ .left = 2, .right = 2 }, .color = COLOR_RED },
         })({
             landingPageBlob(0, 30, FONT_ID_BODY_30, COLOR_ZIG_LOGO, 64, 510, "The official Clay website recreated with zclay: clay-zig-bindings", &zig_logo_image6);
-            cl.UI()(.{
-                .id = .ID("ClayPresentation"),
-                .layout = .{
-                    .sizing = .grow,
-                    .child_alignment = .{ .y = .center },
-                    .child_gap = 16,
-                },
-            })({
+            cl.UI()(.{ .id = .ID("ClayPresentation"), .layout = .{ .sizing = .grow, .child_alignment = .{ .y = .center }, .child_gap = 16 } })({
                 cl.UI()(.{
                     .id = .ID("LeftText"),
                     .layout = .{ .sizing = .{ .w = .percent(0.55) }, .direction = .top_to_bottom, .child_gap = 8 },
                 })({
-                    cl.text(
-                        "Clay is a flex-box style UI auto layout library in C, with declarative syntax and microsecond performance.",
-                        .{ .font_size = 56, .font_id = FONT_ID_TITLE_56, .color = COLOR_RED },
-                    );
+                    cl.text("Clay is a flex-box style UI auto layout library in C, with declarative syntax and microsecond performance.", .{ .font_size = 56, .font_id = FONT_ID_TITLE_56, .color = COLOR_RED });
                     cl.UI()(.{ .layout = .{ .sizing = .{ .w = .grow, .h = .fixed(32) } } })({});
-                    cl.text(
-                        "Clay is laying out this webpage right now!",
-                        .{ .font_size = 36, .font_id = FONT_ID_BODY_36, .color = COLOR_ORANGE },
-                    );
+                    cl.text("Clay is laying out this webpage right now!", .{ .font_size = 36, .font_id = FONT_ID_BODY_36, .color = COLOR_ORANGE });
                 });
 
                 cl.UI()(.{
                     .id = .ID("HeroImageOuter"),
                     .layout = .{ .sizing = .{ .w = .percent(0.45) }, .direction = .top_to_bottom, .child_alignment = .{ .x = .center }, .child_gap = 16 },
                 })({
-                    landingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_5, 32, 480, "High performance", &checkImage5);
-                    landingPageBlob(2, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_4, 32, 480, "Flexbox-style responsive layout", &checkImage4);
-                    landingPageBlob(3, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_3, 32, 480, "Declarative syntax", &checkImage3);
-                    landingPageBlob(4, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_2, 32, 480, "Single .h file for C/C++", &checkImage2);
-                    landingPageBlob(5, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_1, 32, 480, "Compile to 15kb .wasm", &checkImage1);
+                    landingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_5, 32, 480, "High performance", &check_image5);
+                    landingPageBlob(2, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_4, 32, 480, "Flexbox-style responsive layout", &check_image4);
+                    landingPageBlob(3, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_3, 32, 480, "Declarative syntax", &check_image3);
+                    landingPageBlob(4, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_2, 32, 480, "Single .h file for C/C++", &check_image2);
+                    landingPageBlob(5, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_1, 32, 480, "Compile to 15kb .wasm", &check_image1);
                 });
             });
         });
@@ -142,31 +114,25 @@ fn landingPageMobile() void {
             .child_gap = 16,
         },
     })({
-        landingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_ZIG_LOGO, 64, 510, "The official Clay website recreated with zclay: clay-zig-bindings", &zig_logo_image6);
+        landingPageBlob(0, 30, FONT_ID_BODY_30, COLOR_ZIG_LOGO, 64, 510, "The official Clay website recreated with zclay: clay-zig-bindings", &zig_logo_image6);
         cl.UI()(.{
             .id = .ID("LeftText"),
             .layout = .{ .sizing = .{ .w = .grow }, .direction = .top_to_bottom, .child_gap = 8 },
         })({
-            cl.text(
-                "Clay is a flex-box style UI auto layout library in C, with declarative syntax and microsecond performance.",
-                .{ .font_size = 56, .font_id = FONT_ID_TITLE_56, .color = COLOR_RED },
-            );
+            cl.text("Clay is a flex-box style UI auto layout library in C, with declarative syntax and microsecond performance.", .{ .font_size = 56, .font_id = FONT_ID_TITLE_56, .color = COLOR_RED });
             cl.UI()(.{ .layout = .{ .sizing = .{ .w = .grow, .h = .fixed(32) } } })({});
-            cl.text(
-                "Clay is laying out this webpage .right now!",
-                .{ .font_size = 36, .font_id = FONT_ID_BODY_36, .color = COLOR_ORANGE },
-            );
+            cl.text("Clay is laying out this webpage .right now!", .{ .font_size = 36, .font_id = FONT_ID_BODY_36, .color = COLOR_ORANGE });
         });
 
         cl.UI()(.{
             .id = .ID("HeroImageOuter"),
             .layout = .{ .sizing = .{ .w = .grow }, .direction = .top_to_bottom, .child_alignment = .{ .x = .center }, .child_gap = 16 },
         })({
-            landingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_5, 32, 480, "High performance", &checkImage5);
-            landingPageBlob(2, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_4, 32, 480, "Flexbox-style responsive layout", &checkImage4);
-            landingPageBlob(3, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_3, 32, 480, "Declarative syntax", &checkImage3);
-            landingPageBlob(4, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_2, 32, 480, "Single .h file for C/C++", &checkImage2);
-            landingPageBlob(5, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_1, 32, 480, "Compile to 15kb .wasm", &checkImage1);
+            landingPageBlob(1, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_5, 32, 480, "High performance", &check_image5);
+            landingPageBlob(2, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_4, 32, 480, "Flexbox-style responsive layout", &check_image4);
+            landingPageBlob(3, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_3, 32, 480, "Declarative syntax", &check_image3);
+            landingPageBlob(4, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_2, 32, 480, "Single .h file for C/C++", &check_image2);
+            landingPageBlob(5, 30, FONT_ID_BODY_30, COLOR_BLOB_BORDER_1, 32, 480, "Compile to 15kb .wasm", &check_image1);
         });
     });
 }
@@ -213,10 +179,7 @@ fn featureBlocks(width_sizing: cl.SizingAxis, outer_padding: u16) void {
 fn featureBlocksDesktop() void {
     cl.UI()(.{
         .id = .ID("FeatureBlocksOuter"),
-        .layout = .{
-            .sizing = .{ .w = .grow },
-            .child_alignment = .{ .y = .center },
-        },
+        .layout = .{ .sizing = .{ .w = .grow }, .child_alignment = .{ .y = .center } },
         .border = .{ .width = .{ .between_children = 2 }, .color = COLOR_RED },
     })({
         featureBlocks(.percent(0.5), 50);
@@ -226,10 +189,7 @@ fn featureBlocksDesktop() void {
 fn featureBlocksMobile() void {
     cl.UI()(.{
         .id = .ID("FeatureBlocksOuter"),
-        .layout = .{
-            .sizing = .{ .w = .grow },
-            .direction = .top_to_bottom,
-        },
+        .layout = .{ .sizing = .{ .w = .grow }, .direction = .top_to_bottom },
         .border = .{ .width = .{ .between_children = 2 }, .color = COLOR_RED },
     })({
         featureBlocks(.grow, 16);
@@ -239,9 +199,7 @@ fn featureBlocksMobile() void {
 fn declarativeSyntaxPage(title_text_config: cl.TextElementConfig, width_sizing: cl.SizingAxis) void {
     cl.UI()(.{ .id = .ID("SyntaxPageLeftText"), .layout = .{ .sizing = .{ .w = width_sizing }, .direction = .top_to_bottom, .child_gap = 8 } })({
         cl.text("Declarative Syntax", title_text_config);
-        cl.UI()(.{
-            .layout = .{ .sizing = .{ .w = .growMinMax(.{ .max = 16 }) } },
-        })({});
+        cl.UI()(.{ .layout = .{ .sizing = .{ .w = .growMinMax(.{ .max = 16 }) } } })({});
         const text_conf = cl.TextElementConfig{ .font_size = 28, .font_id = FONT_ID_BODY_28, .color = COLOR_RED };
         cl.text("Flexible and readable declarative syntax with nested UI element hierarchies.", text_conf);
         cl.text("Mix elements with standard C code like loops, conditionals and functions.", text_conf);
@@ -251,7 +209,8 @@ fn declarativeSyntaxPage(title_text_config: cl.TextElementConfig, width_sizing: 
         cl.UI()(.{
             .id = .ID("SyntaxPageRightImage"),
             .layout = .{ .sizing = .{ .w = .growMinMax(.{ .max = 568 }) } },
-            .image = .{ .image_data = &syntaxImage, .source_dimensions = .{ .h = 1136, .w = 1194 } },
+            .aspect_ratio = .{ .aspect_ratio = 1194 / 1136 },
+            .image = .{ .image_data = &syntax_image },
         })({});
     });
 }
@@ -296,18 +255,9 @@ fn highPerformancePage(lerp_value: f32, title_text_tonfig: cl.TextElementConfig,
     cl.UI()(.{ .id = .ID("PerformanceLeftText"), .layout = .{ .sizing = .{ .w = width_sizing }, .direction = .top_to_bottom, .child_gap = 8 } })({
         cl.text("High Performance", title_text_tonfig);
         cl.UI()(.{ .layout = .{ .sizing = .{ .w = .growMinMax(.{ .max = 16 }) } } })({});
-        cl.text(
-            "Fast enough to recompute your entire UI every frame.",
-            .{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_LIGHT },
-        );
-        cl.text(
-            "Small memory footprint (3.5mb default) with static allocation & reuse. No malloc / free.",
-            .{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_LIGHT },
-        );
-        cl.text(
-            "Simplify animations and reactive UI design by avoiding the standard performance hacks.",
-            .{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_LIGHT },
-        );
+        cl.text("Fast enough to recompute your entire UI every frame.", .{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_LIGHT });
+        cl.text("Small memory footprint (3.5mb default) with static allocation & reuse. No malloc / free.", .{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_LIGHT });
+        cl.text("Simplify animations and reactive UI design by avoiding the standard performance hacks.", .{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_LIGHT });
     });
     cl.UI()(.{ .id = .ID("PerformanceRightImageOuter"), .layout = .{ .sizing = .{ .w = width_sizing }, .child_alignment = .{ .x = .center } } })({
         cl.UI()(.{
@@ -322,6 +272,7 @@ fn highPerformancePage(lerp_value: f32, title_text_tonfig: cl.TextElementConfig,
             })({
                 cl.text(LOREM_IPSUM_TEXT, .{ .font_size = 16, .font_id = FONT_ID_BODY_16, .color = COLOR_LIGHT });
             });
+
             cl.UI()(.{
                 .id = .ID("AnimationDemoContainerRight"),
                 .layout = .{ .sizing = .{ .w = .grow, .h = .grow }, .child_alignment = .{ .y = .center }, .padding = .all(16) },
@@ -391,18 +342,9 @@ fn rendererPage(title_text_config: cl.TextElementConfig, width_sizing: cl.Sizing
     cl.UI()(.{ .id = .ID("RendererLeftText"), .layout = .{ .sizing = .{ .w = width_sizing }, .direction = .top_to_bottom, .child_gap = 8 } })({
         cl.text("Renderer & Platform Agnostic", title_text_config);
         cl.UI()(.{ .layout = .{ .sizing = .{ .w = .growMinMax(.{ .max = 16 }) } } })({});
-        cl.text(
-            "Clay outputs a sorted array of primitive render commands, such as RECTANGLE, TEXT or IMAGE.",
-            .{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_RED },
-        );
-        cl.text(
-            "Write your own renderer in a few hundred lines of code, or use the provided examples for Raylib, WebGL canvas and more.",
-            .{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_RED },
-        );
-        cl.text(
-            "There's even an HTML renderer - you're looking at it right now!",
-            .{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_RED },
-        );
+        cl.text("Clay outputs a sorted array of primitive render commands, such as RECTANGLE, TEXT or IMAGE.", .{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_RED });
+        cl.text("Write your own renderer in a few hundred lines of code, or use the provided examples for Raylib, WebGL canvas and more.", .{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_RED });
+        cl.text("There's even an HTML renderer - you're looking at it right now!", .{ .font_size = 28, .font_id = FONT_ID_BODY_36, .color = COLOR_RED });
     });
     cl.UI()(.{
         .id = .ID("RendererRightText"),
@@ -417,11 +359,7 @@ fn rendererPage(title_text_config: cl.TextElementConfig, width_sizing: cl.Sizing
 fn rendererPageDesktop() void {
     cl.UI()(.{
         .id = .ID("RendererPageDesktop"),
-        .layout = .{
-            .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) },
-            .child_alignment = .{ .y = .center },
-            .padding = .{ .left = 50, .right = 50 },
-        },
+        .layout = .{ .sizing = .{ .w = .grow, .h = .fitMinMax(.{ .min = @floatFromInt(window_height - 50) }) }, .child_alignment = .{ .y = .center }, .padding = .{ .left = 50, .right = 50 } },
     })({
         cl.UI()(.{
             .id = .ID("RendererPage"),
@@ -449,7 +387,7 @@ fn rendererPageMobile() void {
     });
 }
 
-fn createLayout(lerp_value: f32) cl.ClayArray(cl.RenderCommand) {
+fn createLayout(lerp_value: f32) []cl.RenderCommand {
     cl.beginLayout();
     cl.UI()(.{
         .id = .ID("OuterContainer"),
@@ -458,18 +396,9 @@ fn createLayout(lerp_value: f32) cl.ClayArray(cl.RenderCommand) {
     })({
         cl.UI()(.{
             .id = .ID("Header"),
-            .layout = .{
-                .sizing = .{ .h = .fixed(50), .w = .grow },
-                .child_alignment = .{ .y = .center },
-                .padding = .{ .left = 32, .right = 32 },
-                .child_gap = 24,
-            },
+            .layout = .{ .sizing = .{ .h = .fixed(50), .w = .grow }, .child_alignment = .{ .y = .center }, .padding = .{ .left = 32, .right = 32 }, .child_gap = 24 },
         })({
-            cl.text("Clay", .{
-                .font_id = FONT_ID_BODY_24,
-                .font_size = 24,
-                .color = .{ 61, 26, 5, 255 },
-            });
+            cl.text("Clay", .{ .font_id = FONT_ID_BODY_24, .font_size = 24, .color = .{ 61, 26, 5, 255 } });
             cl.UI()(.{ .layout = .{ .sizing = .{ .w = .grow } } })({});
 
             if (!mobile_screen) {
@@ -487,10 +416,7 @@ fn createLayout(lerp_value: f32) cl.ClayArray(cl.RenderCommand) {
                 .corner_radius = .all(10),
                 .background_color = if (cl.hovered()) COLOR_LIGHT_HOVER else COLOR_LIGHT,
             })({
-                cl.text(
-                    "Github",
-                    .{ .font_id = FONT_ID_BODY_24, .font_size = 24, .color = .{ 61, 26, 5, 255 } },
-                );
+                cl.text("Github", .{ .font_id = FONT_ID_BODY_24, .font_size = 24, .color = .{ 61, 26, 5, 255 } });
             });
         });
         inline for (COLORS_TOP_BORDER, 0..) |color, i| {
@@ -503,7 +429,7 @@ fn createLayout(lerp_value: f32) cl.ClayArray(cl.RenderCommand) {
 
         cl.UI()(.{
             .id = .ID("ScrollContainerBackgroundRectangle"),
-            .scroll = .{ .vertical = true },
+            .clip = .{ .vertical = true, .child_offset = cl.getScrollOffset() },
             .layout = .{ .sizing = .grow, .direction = .top_to_bottom },
             .background_color = COLOR_LIGHT,
             .border = .{ .width = .{ .between_children = 2 }, .color = COLOR_RED },
@@ -554,7 +480,6 @@ pub fn main() !void {
         .window_resizable = true,
     });
     rl.initWindow(1000, 1000, "Raylib zig Example");
-    rl.setWindowMinSize(300, 100);
     rl.setTargetFPS(60);
 
     // load assets
@@ -569,12 +494,12 @@ pub fn main() !void {
     try loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_24, 24);
     try loadFont(@embedFile("resources/Quicksand-Semibold.ttf"), FONT_ID_BODY_16, 16);
 
-    syntaxImage = try loadImage("resources/declarative.png");
-    checkImage1 = try loadImage("resources/check_1.png");
-    checkImage2 = try loadImage("resources/check_2.png");
-    checkImage3 = try loadImage("resources/check_3.png");
-    checkImage4 = try loadImage("resources/check_4.png");
-    checkImage5 = try loadImage("resources/check_5.png");
+    syntax_image = try loadImage("resources/declarative.png");
+    check_image1 = try loadImage("resources/check_1.png");
+    check_image2 = try loadImage("resources/check_2.png");
+    check_image3 = try loadImage("resources/check_3.png");
+    check_image4 = try loadImage("resources/check_4.png");
+    check_image5 = try loadImage("resources/check_5.png");
     zig_logo_image6 = try loadImage("resources/zig-mark.png");
 
     var animation_lerp_value: f32 = -1.0;
@@ -611,10 +536,10 @@ pub fn main() !void {
             .w = @floatFromInt(window_width),
             .h = @floatFromInt(window_height),
         });
-        var render_commands = createLayout(if (animation_lerp_value < 0) animation_lerp_value + 1 else 1 - animation_lerp_value);
+        const render_commands = createLayout(if (animation_lerp_value < 0) animation_lerp_value + 1 else 1 - animation_lerp_value);
 
         rl.beginDrawing();
-        try renderer.clayRaylibRender(&render_commands, allocator);
+        try renderer.clayRaylibRender(render_commands, allocator);
         rl.endDrawing();
     }
 }

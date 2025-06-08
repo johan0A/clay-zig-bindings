@@ -20,7 +20,7 @@ fn sidebarItemComponent(index: u32) void {
 }
 
 // An example function to begin the "root" of your layout tree
-fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderCommand) {
+fn createLayout(profile_picture: *const rl.Texture2D) []cl.RenderCommand {
     cl.beginLayout();
     cl.UI()(.{
         .id = .ID("OuterContainer"),
@@ -46,7 +46,8 @@ fn createLayout(profile_picture: *const rl.Texture2D) cl.ClayArray(cl.RenderComm
                 cl.UI()(.{
                     .id = .ID("ProfilePicture"),
                     .layout = .{ .sizing = .{ .h = .fixed(60), .w = .fixed(60) } },
-                    .image = .{ .source_dimensions = .{ .h = 60, .w = 60 }, .image_data = @ptrCast(profile_picture) },
+                    .aspect_ratio = .{ .aspect_ratio = 60 / 60 },
+                    .image = .{ .image_data = @ptrCast(profile_picture) },
                 })({});
                 cl.text("Clay - UI Library", .{ .font_size = 24, .color = light_grey });
             });
@@ -93,7 +94,6 @@ pub fn main() !void {
         .window_resizable = true,
     });
     rl.initWindow(1000, 1000, "Raylib zig Example");
-    rl.setWindowMinSize(300, 100);
     rl.setTargetFPS(120);
 
     // load assets
@@ -124,10 +124,10 @@ pub fn main() !void {
             .w = @floatFromInt(rl.getScreenWidth()),
             .h = @floatFromInt(rl.getScreenHeight()),
         });
-        var render_commands = createLayout(&profile_picture);
+        const render_commands = createLayout(&profile_picture);
 
         rl.beginDrawing();
-        try renderer.clayRaylibRender(&render_commands, allocator);
+        try renderer.clayRaylibRender(render_commands, allocator);
         rl.endDrawing();
     }
 }

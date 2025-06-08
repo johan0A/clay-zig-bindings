@@ -1,5 +1,6 @@
 const std = @import("std");
 const B = std.Build;
+const rl = @import("raylib");
 
 pub fn build(b: *B) void {
     const target = b.standardTargetOptions(.{});
@@ -10,7 +11,20 @@ pub fn build(b: *B) void {
         .target = target,
         .optimize = optimize,
     });
-    addDependencies(root_module, b, target, optimize);
+
+    const zclay_dep = b.dependency("zclay", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    root_module.addImport("zclay", zclay_dep.module("zclay"));
+
+    const raylib_dep = b.dependency("raylib_zig", .{
+        .target = target,
+        .optimize = optimize,
+        .platform = .rgfw,
+    });
+    root_module.addImport("raylib", raylib_dep.module("raylib"));
+    root_module.linkLibrary(raylib_dep.artifact("raylib"));
 
     {
         const exe = b.addExecutable(.{ .name = "zclay-example", .root_module = root_module });
@@ -41,24 +55,4 @@ pub fn build(b: *B) void {
         check.dependOn(&exe_check.step);
         check.dependOn(&tests_check.step);
     }
-}
-
-fn addDependencies(
-    module: *B.Module,
-    b: *B,
-    target: B.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
-) void {
-    const zclay_dep = b.dependency("zclay", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    module.addImport("zclay", zclay_dep.module("zclay"));
-
-    const raylib_dep = b.dependency("raylib_zig", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    module.addImport("raylib", raylib_dep.module("raylib"));
-    module.linkLibrary(raylib_dep.artifact("raylib"));
 }
