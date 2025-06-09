@@ -1083,7 +1083,7 @@ pub fn getElementId(string: []const u8) ElementId {
 }
 
 // TODO: doc
-fn getScrollOffset() Vector2 {
+pub fn getScrollOffset() Vector2 {
     return cdefs.Clay_GetScrollOffset();
 }
 
