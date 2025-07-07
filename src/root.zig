@@ -110,7 +110,12 @@ pub const Vector2 = extern struct {
 
 /// Represents an RGBA color where components are in 0-255 range
 /// order: r, g, b, a
-pub const Color = [4]f32;
+pub const Color = packed struct {
+    r: u8,
+    g: u8,
+    b: u8,
+    a: u8,
+};
 
 pub const BoundingBox = extern struct {
     /// X coordinate of the top-left corner
