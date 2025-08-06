@@ -210,10 +210,10 @@ pub const Padding = extern struct {
     /// Padding with horizontal and vertical values
     pub fn xy(vertical_padding: u16, horizontal_padding: u16) Padding {
         return .{
-            .top = vertical_padding,
-            .bottom = vertical_padding,
-            .left = horizontal_padding,
-            .right = horizontal_padding,
+            .top = horizontal_padding,
+            .bottom = horizontal_padding,
+            .left = vertical_padding,
+            .right = vertical_padding,
         };
     }
 
@@ -263,7 +263,7 @@ pub const TextElementConfig = extern struct {
     /// Controls how text "wraps", that is how it is broken into multiple lines when there is insufficient horizontal space.
     wrap_mode: TextElementConfigWrapMode = .words,
     /// Controls how wrapped lines of text are horizontally aligned within the outer text bounding box.
-    alignement: TextAlignment = .left,
+    alignment: TextAlignment = .left,
 };
 
 pub const FloatingAttachPointType = enum(EnumBackingType) {
