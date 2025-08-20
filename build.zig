@@ -20,6 +20,7 @@ pub fn build(b: *B) void {
 
         clay_lib.addCSourceFile(.{
             .file = b.addWriteFiles().add("clay.c",
+                \\#define CLAY_DISABLE_SIMD
                 \\#define CLAY_IMPLEMENTATION
                 \\#include<clay.h>
             ),
