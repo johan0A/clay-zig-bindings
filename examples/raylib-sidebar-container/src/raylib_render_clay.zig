@@ -12,11 +12,15 @@ pub fn clayColorToRaylibColor(color: cl.Color) rl.Color {
     };
 }
 
-pub var raylib_fonts: [10]?rl.Font = .{null} ** 10;
+pub var raylib_fonts: [10]?rl.Font = @splat(null);
 
-pub fn clayRaylibRender(render_commands: []cl.RenderCommand, allocator: std.mem.Allocator) !void {
-    for (0..render_commands.len) |i| {
-        const render_command = render_commands[i];
+pub fn clayRaylibRender(render_commands: []cl.RenderCommand, gpa: std.mem.Allocator) !void {
+    var arena = std.heap.ArenaAllocator.init(gpa);
+    defer arena.deinit();
+
+    for (render_commands) |render_command| {
+        defer _ = arena.reset(.retain_capacity);
+
         const bounding_box = render_command.bounding_box;
         switch (render_command.command_type) {
             .none => {},
@@ -24,8 +28,8 @@ pub fn clayRaylibRender(render_commands: []cl.RenderCommand, allocator: std.mem.
                 const config = render_command.render_data.text;
                 const text = config.string_contents.chars[0..@intCast(config.string_contents.length)];
                 // Raylib uses standard C strings so isn't compatible with cheap slices, we need to clone the string to append null terminator
-                const cloned = try allocator.dupeZ(u8, text);
-                defer allocator.free(cloned);
+                const cloned = try arena.allocator().dupeZ(u8, text);
+                defer arena.allocator().free(cloned);
 
                 const fontToUse: rl.Font = raylib_fonts[config.font_id].?;
                 rl.setTextLineSpacing(config.line_height);

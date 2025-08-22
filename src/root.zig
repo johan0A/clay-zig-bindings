@@ -56,16 +56,27 @@ pub const EnumBackingType = u8;
 
 /// Clay String representation, not guaranteed to be null terminated
 pub const String = extern struct {
-    // TODO: doc
-    is_statically_allocated: bool = false,
+    /// Set this boolean to true if the `chars: [*]const u8` data underlying this string will live for the entire lifetime of the program.
+    /// This will automatically be set for strings created with CLAY_STRING, as the macro requires a string literal.
+    is_statically_allocated: bool,
     /// Length of the string in bytes
     length: i32,
     /// Pointer to the character data
     chars: [*]const u8,
 
-    /// Converts a Zig string slice to a Clay_String
-    pub fn fromSlice(string: []const u8) String {
+    /// Converts a Zig comptime string slice to a Clay_String, see `fromRuntimeSlice` form non-comptime strings.
+    pub fn fromSlice(comptime string: []const u8) String {
         return .{
+            .is_statically_allocated = true,
+            .chars = @ptrCast(@constCast(string)),
+            .length = @intCast(string.len),
+        };
+    }
+
+    /// Converts a Zig string slice to a Clay_String
+    pub fn fromRuntimeSlice(string: []const u8) String {
+        return .{
+            .is_statically_allocated = false,
             .chars = @ptrCast(@constCast(string)),
             .length = @intCast(string.len),
         };
@@ -207,13 +218,15 @@ pub const Padding = extern struct {
     /// Padding on bottom side
     bottom: u16 = 0,
 
-    /// Padding with horizontal and vertical values
-    pub fn xy(vertical_padding: u16, horizontal_padding: u16) Padding {
+    pub const xy = @compileError("renamed to axes"); // TODO: remove this in v0.3.0
+
+    /// Padding with vertical and horizontal values
+    pub fn axes(top_bottom: u16, left_right: u16) Padding {
         return .{
-            .top = horizontal_padding,
-            .bottom = horizontal_padding,
-            .left = vertical_padding,
-            .right = vertical_padding,
+            .top = top_bottom,
+            .bottom = top_bottom,
+            .left = left_right,
+            .right = left_right,
         };
     }
 
@@ -247,7 +260,7 @@ pub const TextAlignment = enum(EnumBackingType) {
 };
 
 pub const TextElementConfig = extern struct {
-    // TODO: doc
+    /// A pointer that will be transparently passed through to the resulting render command.
     user_data: ?*anyopaque = null,
     /// The RGBA color of the font to render, conventionally specified as 0-255.
     color: Color = .{ 0, 0, 0, 255 },
@@ -297,9 +310,9 @@ pub const FloatingAttachToElement = enum(EnumBackingType) {
 };
 
 pub const FloatingClipToElement = enum(EnumBackingType) {
-    // TODO: doc
+    /// (default) - The floating element does not inherit clipping.
     to_none = 0,
-    // TODO: doc
+    /// The floating element is clipped to the same clipping rectangle as the element it's attached to.
     to_attached_parent = 1,
 };
 
@@ -326,7 +339,7 @@ pub const FloatingElementConfig = extern struct {
     pointer_capture_mode: PointerCaptureMode = .capture,
     /// Controls which element this floating element is attached to
     attach_to: FloatingAttachToElement = .to_none,
-    // TODO: doc
+    /// Controls whether or not a floating element is clipped to the same clipping rectangle as the element it's attached to.
     clip_to: FloatingClipToElement = .to_none,
 };
 
@@ -429,39 +442,39 @@ pub const ElementId = extern struct {
     /// The string ID to hash
     string_id: String,
 
-    /// Creates a global element ID from a string literal
+    /// Creates a global element ID from a string
     pub fn ID(string: []const u8) ElementId {
-        return cdefs.Clay__HashString(.fromSlice(string), 0, 0);
+        return cdefs.Clay__HashString(.fromRuntimeSlice(string), 0, 0); // TODO move hashing to zig side for performance
     }
 
     /// Creates a global element ID with an index component for use in loops
-    /// Equivalent to ID("prefix0"), ID("prefix1"), etc. without string allocations
+    /// Equivalent to `ID("prefix0")`, `ID("prefix1")`, etc. without string allocations
     pub fn IDI(string: []const u8, index: u32) ElementId {
-        return cdefs.Clay__HashString(.fromSlice(string), index, 0);
+        return cdefs.Clay__HashString(.fromRuntimeSlice(string), index, 0);
     }
 
-    /// Creates a local element ID from a string literal
+    /// Creates a local element ID from a string
     /// Local IDs are scoped to the current parent element
     pub fn localID(string: []const u8) ElementId {
-        return cdefs.Clay__HashString(.fromSlice(string), 0, cdefs.Clay__GetParentElementId());
+        return cdefs.Clay__HashString(.fromRuntimeSlice(string), 0, cdefs.Clay__GetParentElementId());
     }
 
-    /// Creates a local element ID from a string literal with index
+    /// Creates a local element ID from a string with index
     /// Local IDs are scoped to the current parent element
     pub fn localIDI(string: []const u8, index: u32) ElementId {
-        return cdefs.Clay__HashString(.fromSlice(string), index, cdefs.Clay__GetParentElementId());
+        return cdefs.Clay__HashString(.fromRuntimeSlice(string), index, cdefs.Clay__GetParentElementId());
     }
 
     /// Creates a global element ID from a source location (@src())
     /// Useful for auto-generating unique IDs based on code location
     pub fn fromSrc(comptime src: std.builtin.SourceLocation) ElementId {
-        cdefs.Clay__HashString(.fromSlice(src.module ++ "#" ++ src.file ++ ":" ++ std.fmt.comptimePrint({}, src.column)), 0, 0);
+        return cdefs.Clay__HashString(.fromSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}", .{src.column})), 0, 0);
     }
 
     /// Creates a global element ID from a source location (@src()) with an index
     /// Useful for auto-generating unique IDs based on code location in loops
     pub fn fromSrcI(comptime src: std.builtin.SourceLocation, index: u32) ElementId {
-        cdefs.Clay__HashString(.fromSlice(src.module ++ "#" ++ src.file ++ ":" ++ std.fmt.comptimePrint({}, src.column)), index, 0);
+        return cdefs.Clay__HashString(.fromSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}", .{src.column})), index, 0);
     }
 };
 
@@ -621,7 +634,7 @@ pub const CustomRenderData = extern struct {
 };
 
 pub const AspectRatioElementConfig = extern struct {
-    // TODO: doc
+    /// A float representing the target "Aspect ratio" for an element, which is its final width divided by its final height.
     aspect_ratio: f32 = 0,
 };
 
@@ -691,7 +704,7 @@ pub const ClipElementConfig = extern struct {
     horizontal: bool = false,
     /// Whether to enable vertical scrolling
     vertical: bool = false,
-    // TODO: doc
+    // Offsets the x,y positions of all child elements. Used primarily for scrolling containers.
     child_offset: Vector2 = .{ .x = 0, .y = 0 },
 };
 
@@ -723,21 +736,21 @@ pub const ElementDeclaration = extern struct {
     /// Firstly, tagging an element with an ID allows you to query information about the element later, such as its mouseover state or dimensions.
     ///
     /// Secondly, IDs are visually useful when attempting to read and modify UI code, as well as when using the built-in debug tools.
-    id: ElementId = .{ .base_id = 0, .id = 0, .offset = 0, .string_id = .{ .chars = &.{}, .length = 0 } },
+    id: ElementId = .{ .base_id = 0, .id = 0, .offset = 0, .string_id = .{ .chars = &.{}, .length = 0, .is_statically_allocated = false } },
     /// Controls various settings that affect the size and position of an element, as well as the sizes and positions of any child elements.
     layout: LayoutConfig = .{},
     /// Controls the background color of the resulting element.
     /// By convention specified as 0-255, but interpretation is up to the renderer.
-    /// If no other config is specified, .background_color will generate a RECTANGLE render command, otherwise it will be passed as a property to IMAGE or CUSTOM render commands.
+    /// If no other config is specified, `.background_color` will generate a `RECTANGLE` render command, otherwise it will be passed as a property to `IMAGE` or `CUSTOM` render commands.
     background_color: Color = .{ 0, 0, 0, 0 },
     /// Controls the "radius", or corner rounding of elements, including rectangles, borders and images.
     corner_radius: CornerRadius = .{},
-    // TODO: doc
+    // Controls settings related to aspect ratio scaling.
     aspect_ratio: AspectRatioElementConfig = .{},
     /// Controls settings related to image elements.
     image: ImageElementConfig = .{ .image_data = null },
     /// Controls whether and how an element "floats", which means it layers over the top of other elements in z order, and doesn't affect the position and size of siblings or parent elements.
-    /// Note: in order to activate floating, .floating.attachTo must be set to something other than the default value.
+    /// Note: in order to activate floating, `.floating.attachTo` must be set to something other than the default value.
     floating: FloatingElementConfig = .{},
     /// Used to create CUSTOM render commands, usually to render element types not supported by Clay.
     custom: CustomElementConfig = .{},
@@ -779,18 +792,18 @@ pub const ElementDeclaration = extern struct {
 /// ```
 pub inline fn UI() fn (config: ElementDeclaration) callconv(.@"inline") fn (void) void {
     const local = struct {
-        fn CloseElement(_: void) void {
+        fn closeElement(_: void) void {
             cdefs.Clay__CloseElement();
         }
 
-        inline fn ConfigureOpenElement(config: ElementDeclaration) fn (void) void {
+        inline fn configureOpenElement(config: ElementDeclaration) fn (void) void {
             cdefs.Clay__ConfigureOpenElement(config);
-            return CloseElement;
+            return closeElement;
         }
     };
 
     cdefs.Clay__OpenElement();
-    return local.ConfigureOpenElement;
+    return local.configureOpenElement;
 }
 
 /// Returns layout data for an element with the given ID
@@ -1060,13 +1073,25 @@ pub fn createArenaWithCapacityAndMemory(buffer: []u8) Arena {
     return cdefs.Clay_CreateArenaWithCapacityAndMemory(@intCast(buffer.len), buffer.ptr);
 }
 
-/// Creates a text element with the given string and configuration
+/// Creates a text element with the given string literal and configuration
+///
+/// see `textDynamic` for runtime known strings
 ///
 /// Example:
 /// ```
 /// text("Hello World", .{ .font_size = 24, .color = .{255, 0, 0, 255} });
 /// ```
-pub fn text(string: []const u8, config: TextElementConfig) void {
+pub fn text(string: []const u8, config: TextElementConfig) void { //TODO: re-evaluate the value of having a comptime and runtime version of this
+    cdefs.Clay__OpenTextElement(.fromRuntimeSlice(string), cdefs.Clay__StoreTextElementConfig(config));
+}
+
+/// Creates a text element with the given string and configuration
+///
+/// Example:
+/// ```
+/// text(foor_text, .{ .font_size = 24, .color = .{255, 0, 0, 255} });
+/// ```
+pub fn textDynamic(string: []const u8, config: TextElementConfig) void {
     cdefs.Clay__OpenTextElement(.fromSlice(string), cdefs.Clay__StoreTextElementConfig(config));
 }
 
@@ -1082,12 +1107,11 @@ pub fn getElementId(string: []const u8) ElementId {
     return cdefs.Clay_GetElementId(.fromSlice(string));
 }
 
-// TODO: doc
-pub fn getScrollOffset() Vector2 {
-    return cdefs.Clay_GetScrollOffset();
-}
+// Returns the internally stored scroll offset for the currently open element.
+// Generally intended for use with clip elements to create scrolling containers.
+pub const getScrollOffset = cdefs.Clay_GetScrollOffset;
 
-// TODO: doc
+// Returns the array of element IDs that the pointer is currently over.
 fn getPointerOverIds() []ElementId {
     const ids = cdefs.Clay_GetPointerOverIds();
     return ids.internal_array[0..@intCast(ids.length)];

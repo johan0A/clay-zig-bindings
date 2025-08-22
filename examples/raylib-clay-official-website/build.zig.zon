@@ -6,8 +6,8 @@
             .path = "../../",
         },
         .raylib_zig = .{
-            .url = "git+https://github.com/Not-Nik/raylib-zig#3bf08a304cfe2baf839705063ff999b8d8bc8c54",
-            .hash = "raylib_zig-5.6.0-dev-KE8REKAqBQAQugfCOjYYVRFOi7iaEJK1EMDcRUq8AOm2",
+            .url = "git+https://github.com/johan0A/raylib-zig#114f58b88ff6a91f9a14f65143c5a3fe16f27f04",
+            .hash = "raylib_zig-5.6.0-dev-KE8REA06BQDyMKul7WIKUSQxbhooGGKyC6xlpJ6-ATkr",
         },
     },
     .paths = .{

@@ -419,16 +419,16 @@ fn createLayout(lerp_value: f32) []cl.RenderCommand {
                 cl.text("Github", .{ .font_id = FONT_ID_BODY_24, .font_size = 24, .color = .{ 61, 26, 5, 255 } });
             });
         });
-        inline for (COLORS_TOP_BORDER, 0..) |color, i| {
+        for (COLORS_TOP_BORDER, 0..) |color, i| {
             cl.UI()(.{
-                .id = .ID("TopBorder" ++ .{i}),
+                .id = .IDI("TopBorder", @intCast(i)),
                 .layout = .{ .sizing = .{ .h = .fixed(4), .w = .grow } },
                 .background_color = color,
             })({});
         }
 
         cl.UI()(.{
-            .id = .ID("ScrollContainerBackgroundRectangle"),
+            .id = .fromSrc(@src()),
             .clip = .{ .vertical = true, .child_offset = cl.getScrollOffset() },
             .layout = .{ .sizing = .grow, .direction = .top_to_bottom },
             .background_color = COLOR_LIGHT,
@@ -532,10 +532,7 @@ pub fn main() !void {
             rl.getFrameTime(),
         );
 
-        cl.setLayoutDimensions(.{
-            .w = @floatFromInt(window_width),
-            .h = @floatFromInt(window_height),
-        });
+        cl.setLayoutDimensions(.{ .w = @floatFromInt(window_width), .h = @floatFromInt(window_height) });
         const render_commands = createLayout(if (animation_lerp_value < 0) animation_lerp_value + 1 else 1 - animation_lerp_value);
 
         rl.beginDrawing();

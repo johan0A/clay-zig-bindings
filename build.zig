@@ -5,7 +5,13 @@ pub fn build(b: *B) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const clay_lib = blk: {
+    const root_module = b.addModule("zclay", .{
+        .root_source_file = b.path("src/root.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    {
         const clay_lib = b.addLibrary(.{
             .name = "clay",
             .linkage = .static,
@@ -26,15 +32,9 @@ pub fn build(b: *B) void {
             .flags = &.{"-ffreestanding"},
         });
 
-        break :blk clay_lib;
-    };
+        root_module.linkLibrary(clay_lib);
+    }
 
-    const root_module = b.addModule("zclay", .{
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    root_module.linkLibrary(clay_lib);
     {
         const exe_unit_tests = b.addTest(.{ .root_module = root_module });
         const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);

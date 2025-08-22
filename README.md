@@ -47,12 +47,12 @@ clay.UI()(.{ // function call for creating a scope
 
 ## installation:
 
-Compatible Zig Version: `0.14.0`
+Compatible Zig Version: `0.15.1`
 
 1. Add `zclay` to the dependency list in `build.zig.zon`: 
 
 ```sh
-zig fetch --save git+https://github.com/johan0A/clay-zig-bindings#v0.13
+zig fetch --save git+https://github.com/johan0A/clay-zig-bindings#v0.2.2+0.14
 ```
 
 2. Config `build.zig`:

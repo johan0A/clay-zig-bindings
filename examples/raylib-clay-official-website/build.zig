@@ -21,7 +21,6 @@ pub fn build(b: *B) void {
     const raylib_dep = b.dependency("raylib_zig", .{
         .target = target,
         .optimize = optimize,
-        .platform = .rgfw,
     });
     root_module.addImport("raylib", raylib_dep.module("raylib"));
     root_module.linkLibrary(raylib_dep.artifact("raylib"));
