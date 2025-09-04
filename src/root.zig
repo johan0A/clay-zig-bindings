@@ -975,7 +975,7 @@ pub fn onHover(
 
     cdefs.Clay_OnHover(
         struct {
-            pub fn f(element_id: ElementId, pointer_data: PointerData, user_data_: ?*anyopaque) callconv(.C) void {
+            pub fn f(element_id: ElementId, pointer_data: PointerData, user_data_: ?*anyopaque) callconv(.c) void {
                 onHoverFunction(
                     element_id,
                     pointer_data,
