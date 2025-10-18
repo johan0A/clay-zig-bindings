@@ -224,7 +224,10 @@ pub const Padding = extern struct {
 
     /// # DEPRECATED
     /// Use .axes instead.
-    pub const xy = axes; // TODO: remove this in v0.3.0
+    pub fn xy(top_bottom: u16, left_right: u16) Padding { // TODO: remove this in v0.3.0
+        std.log.warn("deprecated(Padding.xy): use Padding.axes instead", .{});
+        return axes(top_bottom, left_right);
+    }
 
     /// Padding with vertical and horizontal values
     pub fn axes(top_bottom: u16, left_right: u16) Padding {
