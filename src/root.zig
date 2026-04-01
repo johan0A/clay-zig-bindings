@@ -1187,17 +1187,7 @@ pub fn createArenaWithCapacityAndMemory(buffer: []u8) Arena {
 /// ```
 /// text("Hello World", .{ .font_size = 24, .color = .{255, 0, 0, 255} });
 /// ```
-pub fn text(string: []const u8, config: TextElementConfig) void { //TODO: re-evaluate the value of having a comptime and runtime version of this
-    cdefs.Clay__OpenTextElement(.fromSlice(string), config);
-}
-
-/// Creates a text element with the given string and configuration
-///
-/// Example:
-/// ```
-/// text(foor_text, .{ .font_size = 24, .color = .{255, 0, 0, 255} });
-/// ```
-pub fn textDynamic(string: []const u8, config: TextElementConfig) void {
+pub fn text(string: []const u8, config: TextElementConfig) void {
     cdefs.Clay__OpenTextElement(.fromSlice(string), config);
 }
 
