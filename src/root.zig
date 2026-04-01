@@ -485,13 +485,21 @@ pub const ElementId = extern struct {
     /// Creates a global element ID from a source location (@src())
     /// Useful for auto-generating unique IDs based on code location
     pub fn fromSrc(comptime src: std.builtin.SourceLocation) ElementId {
-        return cdefs.Clay__HashString(.fromComptimeSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}", .{src.column})), 0, 0);
+        return cdefs.Clay__HashStringWithOffset(
+            .fromComptimeSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}:{}", .{ src.line, src.column })),
+            0,
+            0,
+        );
     }
 
     /// Creates a global element ID from a source location (@src()) with an index
     /// Useful for auto-generating unique IDs based on code location in loops
     pub fn fromSrcI(comptime src: std.builtin.SourceLocation, index: u32) ElementId {
-        return cdefs.Clay__HashString(.fromComptimeSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}", .{src.column})), index, 0);
+        return cdefs.Clay__HashStringWithOffset(
+            .fromComptimeSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}:{}", .{ src.line, src.column })),
+            index,
+            0,
+        );
     }
 };
 
