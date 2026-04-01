@@ -480,6 +480,15 @@ pub const ElementId = extern struct {
     pub fn localIDI(string: []const u8, index: u32) ElementId {
         return cdefs.Clay__HashStringWithOffset(.fromSlice(string), index, cdefs.Clay__GetParentElementId());
     }
+
+    /// Creates a local element ID from an explicit parent ID and a string.
+    pub fn inheritedID(string: []const u8, parent: u32) ElementId {
+        return cdefs.Clay__HashStringWithOffset(.fromSlice(string), 0, parent);
+    }
+
+    /// Creates a local element ID from an explicit parent ID and a string with index.
+    pub fn inheritedIDI(string: []const u8, parent: u32, index: u32) ElementId {
+        return cdefs.Clay__HashStringWithOffset(.fromSlice(string), index, parent);
     }
 
     /// Creates a global element ID from a source location (@src())
