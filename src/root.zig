@@ -2,7 +2,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 test {
-    std.testing.refAllDeclsRecursive(@This());
+    std.testing.refAllDecls(@This());
 }
 
 pub extern var CLAY_LAYOUT_DEFAULT: LayoutConfig;
