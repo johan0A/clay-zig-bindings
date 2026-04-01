@@ -83,7 +83,7 @@ pub const String = extern struct {
     /// Converts a Zig string slice to a Clay_String
     pub fn fromSlice(string: []const u8) String {
         return .{
-            .is_statically_allocated = false,
+            .is_statically_allocated = true, // we never use dynamic strings for IDs
             .chars = @ptrCast(@constCast(string)),
             .length = @intCast(string.len),
         };
