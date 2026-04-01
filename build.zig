@@ -5,6 +5,12 @@ pub fn build(b: *B) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const preferred_linkage = b.option(
+        std.builtin.LinkMode,
+        "preferred_linkage",
+        "Prefer building statically or dynamically linked libraries (default: static)",
+    ) orelse .static;
+
     const root_module = b.addModule("zclay", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
@@ -29,6 +35,7 @@ pub fn build(b: *B) void {
 
         const clay_lib = b.addLibrary(.{
             .name = "clay",
+            .linkage = preferred_linkage,
             .root_module = clay_lib_mod,
         });
 
