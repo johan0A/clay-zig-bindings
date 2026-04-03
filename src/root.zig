@@ -481,6 +481,18 @@ pub const ElementId = extern struct {
         return cdefs.Clay__HashStringWithOffset(.fromSlice(string), index, cdefs.Clay__GetParentElementId());
     }
 
+    /// Creates a local element ID from a string
+    /// Forked IDs are scoped to the current open element
+    pub fn forkedID(string: []const u8) ElementId {
+        return cdefs.Clay__HashStringWithOffset(.fromSlice(string), 0, cdefs.Clay_GetOpenElementId());
+    }
+
+    /// Creates a local element ID from a string with index
+    /// Forked IDs are scoped to the current open element
+    pub fn forkedIDI(string: []const u8, index: u32) ElementId {
+        return cdefs.Clay__HashStringWithOffset(.fromSlice(string), index, cdefs.Clay_GetOpenElementId());
+    }
+
     /// Creates a local element ID from an explicit parent ID and a string.
     pub fn inheritedID(string: []const u8, parent: u32) ElementId {
         return cdefs.Clay__HashStringWithOffset(.fromSlice(string), 0, parent);
@@ -993,6 +1005,9 @@ pub fn endLayout() []RenderCommand {
     const commands = cdefs.Clay_EndLayout();
     return commands.internal_array[0..@intCast(commands.length)];
 }
+
+/// Gets the ID of the currently open element, useful for retrieving IDs generated automatically.
+pub const getOpenElementId = cdefs.Clay_GetOpenElementId;
 
 /// Gets an element ID with a numeric index - useful for loops
 /// Generally only used for dynamic strings when ElementId.IDI() can't be used
