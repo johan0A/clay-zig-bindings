@@ -2,7 +2,7 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 test {
-    std.testing.refAllDeclsRecursive(@This());
+    std.testing.refAllDecls(@This());
 }
 
 pub extern var CLAY_LAYOUT_DEFAULT: LayoutConfig;
@@ -27,6 +27,7 @@ pub const cdefs = struct {
     pub extern fn Clay_SetLayoutDimensions(dimensions: Dimensions) void;
     pub extern fn Clay_BeginLayout() void;
     pub extern fn Clay_EndLayout() ClayArray(RenderCommand);
+    pub extern fn Clay_GetOpenElementId() u32;
     pub extern fn Clay_GetElementId(idString: String) ElementId;
     pub extern fn Clay_GetElementIdWithIndex(idString: String, index: u32) ElementId;
     pub extern fn Clay_Hovered() bool;
@@ -49,10 +50,12 @@ pub const cdefs = struct {
     pub extern fn Clay__ConfigureOpenElement(config: ElementDeclaration) void;
     pub extern fn Clay__ConfigureOpenElementPtr(config: *ElementDeclaration) void; // TODO: investigate uses
     pub extern fn Clay__OpenElement() void;
+    pub extern fn Clay__OpenElementWithId(element_id: ElementId) void;
     pub extern fn Clay__CloseElement() void;
     pub extern fn Clay__StoreTextElementConfig(config: TextElementConfig) *TextElementConfig;
-    pub extern fn Clay__HashString(key: String, offset: u32, seed: u32) ElementId;
-    pub extern fn Clay__OpenTextElement(text: String, textConfig: *TextElementConfig) void;
+    pub extern fn Clay__HashString(key: String, seed: u32) ElementId;
+    pub extern fn Clay__HashStringWithOffset(key: String, offset: u32, seed: u32) ElementId;
+    pub extern fn Clay__OpenTextElement(text: String, textConfig: TextElementConfig) void;
     pub extern fn Clay__GetParentElementId() u32;
 };
 
@@ -80,7 +83,7 @@ pub const String = extern struct {
     /// Converts a Zig string slice to a Clay_String
     pub fn fromSlice(string: []const u8) String {
         return .{
-            .is_statically_allocated = false,
+            .is_statically_allocated = true, // we never use dynamic strings for IDs
             .chars = @ptrCast(@constCast(string)),
             .length = @intCast(string.len),
         };
@@ -367,8 +370,12 @@ pub const RenderCommandType = enum(EnumBackingType) {
     scissor_start = 5,
     /// End clipping - resume rendering elements without restriction
     scissor_end = 6,
+    /// Begin performing a "color overlay" on all subsequent render commands until disabled again.
+    overlay_color_start = 7,
+    /// Disable any previously active "color overlay" and render elements with their standard colors again.
+    overlay_color_end = 8,
     /// Custom implementation based on the render command's customData
-    custom = 7,
+    custom = 9,
 };
 
 pub const PointerDataInteractionState = enum(EnumBackingType) {
@@ -453,37 +460,67 @@ pub const ElementId = extern struct {
 
     /// Creates a global element ID from a string
     pub fn ID(string: []const u8) ElementId {
-        return cdefs.Clay__HashString(.fromSlice(string), 0, 0); // TODO move hashing to zig side for performance (?)
+        return cdefs.Clay__HashStringWithOffset(.fromSlice(string), 0, 0); // TODO move hashing to zig side for performance (?)
     }
 
     /// Creates a global element ID with an index component for use in loops
     /// Equivalent to `ID("prefix0")`, `ID("prefix1")`, etc. without string allocations
     pub fn IDI(string: []const u8, index: u32) ElementId {
-        return cdefs.Clay__HashString(.fromSlice(string), index, 0);
+        return cdefs.Clay__HashStringWithOffset(.fromSlice(string), index, 0);
     }
 
     /// Creates a local element ID from a string
     /// Local IDs are scoped to the current parent element
     pub fn localID(string: []const u8) ElementId {
-        return cdefs.Clay__HashString(.fromSlice(string), 0, cdefs.Clay__GetParentElementId());
+        return cdefs.Clay__HashStringWithOffset(.fromSlice(string), 0, cdefs.Clay__GetParentElementId());
     }
 
     /// Creates a local element ID from a string with index
     /// Local IDs are scoped to the current parent element
     pub fn localIDI(string: []const u8, index: u32) ElementId {
-        return cdefs.Clay__HashString(.fromSlice(string), index, cdefs.Clay__GetParentElementId());
+        return cdefs.Clay__HashStringWithOffset(.fromSlice(string), index, cdefs.Clay__GetParentElementId());
+    }
+
+    /// Creates a local element ID from a string
+    /// Forked IDs are scoped to the current open element
+    pub fn forkedID(string: []const u8) ElementId {
+        return cdefs.Clay__HashStringWithOffset(.fromSlice(string), 0, cdefs.Clay_GetOpenElementId());
+    }
+
+    /// Creates a local element ID from a string with index
+    /// Forked IDs are scoped to the current open element
+    pub fn forkedIDI(string: []const u8, index: u32) ElementId {
+        return cdefs.Clay__HashStringWithOffset(.fromSlice(string), index, cdefs.Clay_GetOpenElementId());
+    }
+
+    /// Creates a local element ID from an explicit parent ID and a string.
+    pub fn inheritedID(string: []const u8, parent: u32) ElementId {
+        return cdefs.Clay__HashStringWithOffset(.fromSlice(string), 0, parent);
+    }
+
+    /// Creates a local element ID from an explicit parent ID and a string with index.
+    pub fn inheritedIDI(string: []const u8, parent: u32, index: u32) ElementId {
+        return cdefs.Clay__HashStringWithOffset(.fromSlice(string), index, parent);
     }
 
     /// Creates a global element ID from a source location (@src())
     /// Useful for auto-generating unique IDs based on code location
     pub fn fromSrc(comptime src: std.builtin.SourceLocation) ElementId {
-        return cdefs.Clay__HashString(.fromComptimeSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}", .{src.column})), 0, 0);
+        return cdefs.Clay__HashStringWithOffset(
+            .fromComptimeSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}:{}", .{ src.line, src.column })),
+            0,
+            0,
+        );
     }
 
     /// Creates a global element ID from a source location (@src()) with an index
     /// Useful for auto-generating unique IDs based on code location in loops
     pub fn fromSrcI(comptime src: std.builtin.SourceLocation, index: u32) ElementId {
-        return cdefs.Clay__HashString(.fromComptimeSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}", .{src.column})), index, 0);
+        return cdefs.Clay__HashStringWithOffset(
+            .fromComptimeSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}:{}", .{ src.line, src.column })),
+            index,
+            0,
+        );
     }
 };
 
@@ -669,6 +706,11 @@ pub const BorderRenderData = extern struct {
     width: BorderWidth,
 };
 
+/// Render command data overlay commands
+pub const OverlayRenderData = extern struct {
+    color: Color,
+};
+
 pub const RenderData = extern union {
     rectangle: RectangleRenderData,
     text: TextRenderData,
@@ -676,6 +718,7 @@ pub const RenderData = extern union {
     custom: CustomRenderData,
     border: BorderRenderData,
     scroll: ClipRenderData,
+    overlay: OverlayRenderData,
 };
 
 /// Configuration for custom elements
@@ -739,22 +782,101 @@ pub const ElementConfigType = enum(EnumBackingType) {
     shared = 7,
 };
 
+pub const TransitionData = extern struct {
+    bounding_box: BoundingBox,
+    background_color: Color,
+    overlay_color: Color,
+    border_color: Color,
+    border_width: BorderWidth,
+};
+
+pub const TransitionState = enum(EnumBackingType) {
+    idle = 0,
+    entering = 1,
+    transitioning = 2,
+    exiting = 3,
+};
+
+pub const TransitionProperty = enum(u32) {
+    _,
+
+    pub const none: TransitionProperty = @enumFromInt(0);
+    pub const x: TransitionProperty = @enumFromInt(1);
+    pub const y: TransitionProperty = @enumFromInt(2);
+    pub const position: TransitionProperty = @enumFromInt(x | y);
+    pub const width: TransitionProperty = @enumFromInt(4);
+    pub const height: TransitionProperty = @enumFromInt(8);
+    pub const dimensions: TransitionProperty = @enumFromInt(width | height);
+    pub const bounding_box: TransitionProperty = @enumFromInt(position | dimensions);
+    pub const background_color: TransitionProperty = @enumFromInt(16);
+    pub const overlay_color: TransitionProperty = @enumFromInt(32);
+    pub const corner_radius: TransitionProperty = @enumFromInt(64);
+    pub const border_color: TransitionProperty = @enumFromInt(128);
+    pub const border_width: TransitionProperty = @enumFromInt(256);
+    pub const border: TransitionProperty = @enumFromInt(border_color | border_width);
+};
+
+pub const TransitionCallbackArguments = extern struct {
+    transition_state: TransitionState,
+    initial: TransitionData,
+    current: *TransitionData,
+    target: TransitionData,
+    elapsed_time: f32,
+    duration: f32,
+    properties: TransitionProperty,
+};
+
+pub const TransitionEnterTriggerType = enum(EnumBackingType) {
+    skip_on_first_parent_frame = 0,
+    trigger_on_first_parent_frame = 1,
+};
+
+pub const TransitionExitTriggerType = enum(EnumBackingType) {
+    skip_when_parent_exits = 0,
+    trigger_when_parent_exits = 1,
+};
+
+pub const TransitionInteractionHandlingType = enum(EnumBackingType) {
+    disable_interactions_while_transitioning_position = 0,
+    allow_interactions_while_transitioning_position = 1,
+};
+
+pub const ExitTransitionSiblingOrdering = enum(EnumBackingType) {
+    underneath_siblings = 0,
+    natural_order = 1,
+    above_siblings = 2,
+};
+
+// Controls settings related to transitions
+pub const TransitionElementConfig = extern struct {
+    handler: ?*const fn (TransitionCallbackArguments) callconv(.c) bool = null,
+    duration: f32 = 0,
+    properties: TransitionProperty = .none,
+    interaction_handling: TransitionInteractionHandlingType = .disable_interactions_while_transitioning_position,
+    enter: extern struct {
+        set_initial_state: ?*const fn (TransitionData, TransitionProperty) callconv(.c) TransitionData = null,
+        trigger: TransitionEnterTriggerType = .skip_on_first_parent_frame,
+    } = .{},
+    exit: extern struct {
+        set_final_state: ?*const fn (TransitionData, TransitionProperty) callconv(.c) TransitionData = null,
+        trigger: TransitionExitTriggerType = .skip_when_parent_exits,
+        sibling_ordering: ExitTransitionSiblingOrdering = .underneath_siblings,
+    } = .{},
+};
+
 pub const ElementDeclaration = extern struct {
-    /// Element IDs have two main use cases.
-    ///
-    /// Firstly, tagging an element with an ID allows you to query information about the element later, such as its mouseover state or dimensions.
-    ///
-    /// Secondly, IDs are visually useful when attempting to read and modify UI code, as well as when using the built-in debug tools.
-    id: ElementId = .{ .base_id = 0, .id = 0, .offset = 0, .string_id = .{ .chars = &.{}, .length = 0, .is_statically_allocated = false } },
     /// Controls various settings that affect the size and position of an element, as well as the sizes and positions of any child elements.
     layout: LayoutConfig = .{},
     /// Controls the background color of the resulting element.
     /// By convention specified as 0-255, but interpretation is up to the renderer.
     /// If no other config is specified, `.background_color` will generate a `RECTANGLE` render command, otherwise it will be passed as a property to `IMAGE` or `CUSTOM` render commands.
     background_color: Color = .{ 0, 0, 0, 0 },
+    /// Perform an image editing style "Color Overlay" on this element and all its children, equivalent to
+    /// glsl mix(elementColor, overlayColor.rgb, overlayColor.a)
+    overlay_color: Color = .{ 0, 0, 0, 0 },
     /// Controls the "radius", or corner rounding of elements, including rectangles, borders and images.
     corner_radius: CornerRadius = .{},
-    // Controls settings related to aspect ratio scaling.
+    /// Controls settings related to aspect ratio scaling.
     aspect_ratio: AspectRatioElementConfig = .{},
     /// Controls settings related to image elements.
     image: ImageElementConfig = .{ .image_data = null },
@@ -767,6 +889,7 @@ pub const ElementDeclaration = extern struct {
     clip: ClipElementConfig = .{},
     /// Controls settings related to element borders, and will generate BORDER render command
     border: BorderElementConfig = .{},
+    transition: TransitionElementConfig = .{},
     /// A pointer that will be transparently passed through to resulting render command
     user_data: ?*anyopaque = null,
 };
@@ -799,7 +922,7 @@ pub const ElementDeclaration = extern struct {
 ///    });
 /// });
 /// ```
-pub inline fn UI() fn (config: ElementDeclaration) callconv(.@"inline") fn (void) void {
+pub inline fn UI(args: struct { id: ?ElementId = null }) fn (config: ElementDeclaration) callconv(.@"inline") fn (void) void {
     const local = struct {
         fn closeElement(_: void) void {
             cdefs.Clay__CloseElement();
@@ -811,7 +934,7 @@ pub inline fn UI() fn (config: ElementDeclaration) callconv(.@"inline") fn (void
         }
     };
 
-    cdefs.Clay__OpenElement();
+    if (args.id) |id| cdefs.Clay__OpenElementWithId(id) else cdefs.Clay__OpenElement();
     return local.configureOpenElement;
 }
 
@@ -882,6 +1005,9 @@ pub fn endLayout() []RenderCommand {
     const commands = cdefs.Clay_EndLayout();
     return commands.internal_array[0..@intCast(commands.length)];
 }
+
+/// Gets the ID of the currently open element, useful for retrieving IDs generated automatically.
+pub const getOpenElementId = cdefs.Clay_GetOpenElementId;
 
 /// Gets an element ID with a numeric index - useful for loops
 /// Generally only used for dynamic strings when ElementId.IDI() can't be used
@@ -1076,18 +1202,8 @@ pub fn createArenaWithCapacityAndMemory(buffer: []u8) Arena {
 /// ```
 /// text("Hello World", .{ .font_size = 24, .color = .{255, 0, 0, 255} });
 /// ```
-pub fn text(string: []const u8, config: TextElementConfig) void { //TODO: re-evaluate the value of having a comptime and runtime version of this
-    cdefs.Clay__OpenTextElement(.fromSlice(string), cdefs.Clay__StoreTextElementConfig(config));
-}
-
-/// Creates a text element with the given string and configuration
-///
-/// Example:
-/// ```
-/// text(foor_text, .{ .font_size = 24, .color = .{255, 0, 0, 255} });
-/// ```
-pub fn textDynamic(string: []const u8, config: TextElementConfig) void {
-    cdefs.Clay__OpenTextElement(.fromSlice(string), cdefs.Clay__StoreTextElementConfig(config));
+pub fn text(string: []const u8, config: TextElementConfig) void {
+    cdefs.Clay__OpenTextElement(.fromSlice(string), config);
 }
 
 /// Gets an element's ID from a string
