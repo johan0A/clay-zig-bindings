@@ -1,7 +1,7 @@
 const std = @import("std");
 const rl = @import("raylib");
 const cl = @import("zclay");
-const renderer = @import("raylib_render_clay.zig");
+const renderer = cl.renderer;
 
 const light_grey: cl.Color = .{ 224, 215, 210, 255 };
 const red: cl.Color = .{ 168, 66, 28, 255 };

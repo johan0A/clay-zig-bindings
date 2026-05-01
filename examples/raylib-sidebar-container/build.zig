@@ -12,18 +12,21 @@ pub fn build(b: *B) void {
         .optimize = optimize,
     });
 
-    const zclay_dep = b.dependency("zclay", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    root_module.addImport("zclay", zclay_dep.module("zclay"));
-
     const raylib_dep = b.dependency("raylib_zig", .{
         .target = target,
         .optimize = optimize,
     });
     root_module.addImport("raylib", raylib_dep.module("raylib"));
     root_module.linkLibrary(raylib_dep.artifact("raylib"));
+
+    const zclay_dep = b.dependency("zclay", .{
+        .target = target,
+        .optimize = optimize,
+        .renderer = .raylib,
+    });
+
+    zclay_dep.module("zclay").addImport("raylib", raylib_dep.module("raylib"));
+    root_module.addImport("zclay", zclay_dep.module("zclay"));
 
     {
         const exe = b.addExecutable(.{ .name = "zclay-example", .root_module = root_module });

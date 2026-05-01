@@ -5,6 +5,11 @@ test {
     std.testing.refAllDecls(@This());
 }
 
+pub const renderer = switch (@import("zclay_options").renderer) {
+    .custom => .{},
+    .raylib => @import("renderers/raylib_render_clay.zig"),
+};
+
 pub extern var CLAY_LAYOUT_DEFAULT: LayoutConfig;
 
 /// Color used for highlighting elements with the debug inspector panel (can be modified directly)
