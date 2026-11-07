@@ -480,16 +480,30 @@ pub const ElementId = extern struct {
         return cdefs.Clay__HashString(.fromSlice(string), index, cdefs.Clay__GetParentElementId());
     }
 
+    /// Creates a local element ID from an explicit parent ID and a string
+    pub fn inheritedID(string: []const u8, parent: u32) ElementId {
+        return cdefs.Clay__HashString(.fromSlice(string), 0, parent);
+    }
+
+    /// Creates a local element ID from an explicit parent ID and a string with index
+    pub fn inheritedIDI(string: []const u8, parent: u32, index: u32) ElementId {
+        return cdefs.Clay__HashString(.fromSlice(string), index, parent);
+    }
+
     /// Creates a global element ID from a source location (@src())
     /// Useful for auto-generating unique IDs based on code location
     pub fn fromSrc(comptime src: std.builtin.SourceLocation) ElementId {
-        return cdefs.Clay__HashString(.fromComptimeSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}", .{src.column})), 0, 0);
+        return cdefs.Clay__HashString(.fromComptimeSlice(
+            src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}:{}", .{ src.line, src.column }),
+        ), 0, 0);
     }
 
     /// Creates a global element ID from a source location (@src()) with an index
     /// Useful for auto-generating unique IDs based on code location in loops
     pub fn fromSrcI(comptime src: std.builtin.SourceLocation, index: u32) ElementId {
-        return cdefs.Clay__HashString(.fromComptimeSlice(src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}", .{src.column})), index, 0);
+        return cdefs.Clay__HashString(.fromComptimeSlice(
+            src.module ++ ":" ++ src.file ++ ":" ++ std.fmt.comptimePrint("{}:{}", .{ src.line, src.column }),
+        ), index, 0);
     }
 };
 
@@ -760,7 +774,7 @@ pub const ElementDeclaration = extern struct {
     background_color: Color = .{ 0, 0, 0, 0 },
     /// Controls the "radius", or corner rounding of elements, including rectangles, borders and images.
     corner_radius: CornerRadius = .{},
-    // Controls settings related to aspect ratio scaling.
+    /// Controls settings related to aspect ratio scaling.
     aspect_ratio: AspectRatioElementConfig = .{},
     /// Controls settings related to image elements.
     image: ImageElementConfig = .{ .image_data = null },
@@ -1085,9 +1099,7 @@ pub fn setMeasureTextFunction(
     cdefs.Clay_SetMeasureTextFunction(local.MeasureTextFunctionWrapper, anytypeToAnyopaquePtr(user_data));
 }
 
-/// Creates a text element with the given string literal and configuration
-///
-/// see `textDynamic` for runtime known strings
+/// Creates a text element with the given string and configuration
 ///
 /// Example:
 /// ```
