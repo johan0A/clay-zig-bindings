@@ -77,15 +77,12 @@ fn loadImage(comptime path: [:0]const u8) !rl.Texture2D {
     return texture;
 }
 
-pub fn main() !void {
-    const allocator = std.heap.page_allocator;
+pub fn main(init: std.process.Init) !void {
+    const gpa = init.gpa;
+    const arena = init.arena.allocator();
 
     // init clay
-    const min_memory_size: u32 = cl.minMemorySize();
-    const memory = try allocator.alloc(u8, min_memory_size);
-    defer allocator.free(memory);
-    const arena: cl.Arena = cl.createArenaWithCapacityAndMemory(memory);
-    _ = cl.initialize(arena, .{ .h = 1000, .w = 1000 }, .{});
+    _ = try cl.initializeAlloc(arena, .{ .h = 1000, .w = 1000 }, .{});
     cl.setMeasureTextFunction(void, {}, renderer.measureText);
 
     // init raylib
@@ -127,7 +124,7 @@ pub fn main() !void {
         const render_commands = createLayout(&profile_picture);
 
         rl.beginDrawing();
-        try renderer.clayRaylibRender(render_commands, allocator);
+        try renderer.clayRaylibRender(render_commands, gpa);
         rl.endDrawing();
     }
 }
