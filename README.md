@@ -67,6 +67,18 @@ compile_step.root_module.addImport("zclay", zclay_dep.module("zclay"));
 ...
 ```
 
+## renderers
+
+Clay only outputs render commands, drawing them is up to you, and you are expected to customize your renderer. For convenience, a basic raylib renderer made with [raylib-zig](https://github.com/raylib-zig/raylib-zig) is available as the `renderer_raylib` module, you need to provide your raylib-zig module to it:
+
+```zig
+const renderer_raylib = zclay_dep.module("renderer_raylib");
+renderer_raylib.addImport("raylib", raylib_dep.module("raylib"));
+compile_step.root_module.addImport("renderer_raylib", renderer_raylib);
+```
+
+Once you need more control, copy [src/renderers/raylib.zig](src/renderers/raylib.zig) into your project and modify it.
+
 ## quickstart
 
 2. Ask clay for how much static memory it needs using [clay.minMemorySize()](https://github.com/nicbarker/clay/blob/main/README.md#clay_minmemorysize), create an Arena for it to use with [clay.createArenaWithCapacityAndMemory(minMemorySize, memory)](https://github.com/nicbarker/clay/blob/main/README.md#clay_createarenawithcapacityandmemory), and initialize it with [clay.Initialize(arena)](https://github.com/nicbarker/clay/blob/main/README.md#clay_initialize).
@@ -90,7 +102,7 @@ pub fn measureText(clay_text: []const u8, config: *clay.TextElementConfig, user_
 }
 
 // Tell clay how to measure text
-clay.setMeasureTextFunction({}, measureText)
+clay.setMeasureTextFunction(void, {}, measureText);
 ``` 
 
 4. **Optional** - Call [clay.setPointerPosition(pointerPosition)](https://github.com/nicbarker/clay/blob/main/README.md#clay_setpointerposition) if you want to use mouse interactions.
@@ -169,13 +181,11 @@ fn createLayout(profile_picture: *const rl.Texture2D) clay.ClayArray(clay.Render
 }
 ```
 
-6. Call [clay.endLayout()](https://github.com/nicbarker/clay/blob/main/README.md#clay_endlayout) and process the resulting [clay.RenderCommandArray](https://github.com/nicbarker/clay/blob/main/README.md#clay_rendercommandarray) in your choice of renderer.
+6. Call [clay.endLayout()](https://github.com/nicbarker/clay/blob/main/README.md#clay_endlayout) and draw the resulting render commands with your renderer, see [renderers](#renderers).
 
 ```zig
-pub fn clayRaylibRender(render_commands: *clay.ClayArray(clay.RenderCommand), allocator: std.mem.Allocator) void {
-    var i: usize = 0;
-    while (i < render_commands.length) : (i += 1) {
-        const render_command = clay.renderCommandArrayGet(render_commands, @intCast(i));
+pub fn render(render_commands: []const clay.RenderCommand) void {
+    for (render_commands) |render_command| {
         const bounding_box = render_command.bounding_box;
         switch (render_command.command_type) {
             .none => {},
@@ -184,3 +194,4 @@ pub fn clayRaylibRender(render_commands: *clay.ClayArray(clay.RenderCommand), al
 ```
 
 Please see the [full C documentation for clay](https://github.com/nicbarker/clay/blob/main/README.md) for API details and the example folder in this repo. All public C functions and Macros have Zig binding equivalents, generally of the form `Clay_BeginLayout` (C) -> `clay.beginLayout` (zig)
+

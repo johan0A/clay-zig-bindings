@@ -1,7 +1,7 @@
 const std = @import("std");
 const rl = @import("raylib");
 const cl = @import("zclay");
-const renderer = @import("raylib_render_clay.zig");
+const renderer = @import("renderer_raylib");
 
 var syntax_image: rl.Texture2D = undefined;
 var check_image1: rl.Texture2D = undefined;
@@ -438,8 +438,8 @@ fn createLayout(lerp_value: f32) []cl.RenderCommand {
 }
 
 fn loadFont(file_data: ?[]const u8, font_id: u16, font_size: i32) !void {
-    renderer.raylib_fonts[font_id] = try rl.loadFontFromMemory(".ttf", file_data, font_size * 2, null);
-    rl.setTextureFilter(renderer.raylib_fonts[font_id].?.texture, .bilinear);
+    renderer.fonts[font_id] = try rl.loadFontFromMemory(".ttf", file_data, font_size * 2, null);
+    rl.setTextureFilter(renderer.fonts[font_id].?.texture, .bilinear);
 }
 
 fn loadImage(comptime path: [:0]const u8) !rl.Texture2D {
@@ -448,7 +448,6 @@ fn loadImage(comptime path: [:0]const u8) !rl.Texture2D {
     return texture;
 }
 pub fn main(init: std.process.Init) !void {
-    const gpa = init.gpa;
     const arena = init.arena.allocator();
 
     // init clay
@@ -517,7 +516,7 @@ pub fn main(init: std.process.Init) !void {
         const render_commands = createLayout(if (animation_lerp_value < 0) animation_lerp_value + 1 else 1 - animation_lerp_value);
 
         rl.beginDrawing();
-        try renderer.clayRaylibRender(render_commands, gpa);
+        renderer.render(render_commands);
         rl.endDrawing();
     }
 }

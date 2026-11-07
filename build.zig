@@ -32,6 +32,14 @@ pub fn build(b: *B) void {
         root_module.linkLibrary(clay_lib);
     }
 
+    // The user provides the "raylib" import so that the renderer shares their raylib types and library
+    _ = b.addModule("renderer_raylib", .{
+        .root_source_file = b.path("src/renderers/raylib.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{.{ .name = "zclay", .module = root_module }},
+    });
+
     {
         const exe_unit_tests = b.addTest(.{ .root_module = root_module });
         const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);

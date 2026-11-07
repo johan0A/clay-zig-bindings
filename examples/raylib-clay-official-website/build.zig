@@ -25,6 +25,10 @@ pub fn build(b: *B) void {
     root_module.addImport("raylib", raylib_dep.module("raylib"));
     root_module.linkLibrary(raylib_dep.artifact("raylib"));
 
+    const renderer_raylib = zclay_dep.module("renderer_raylib");
+    renderer_raylib.addImport("raylib", raylib_dep.module("raylib"));
+    root_module.addImport("renderer_raylib", renderer_raylib);
+
     {
         const exe = b.addExecutable(.{ .name = "zclay-example", .root_module = root_module });
 
