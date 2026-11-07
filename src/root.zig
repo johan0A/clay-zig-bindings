@@ -19,9 +19,9 @@ pub const cdefs = struct {
     pub extern fn Clay_MinMemorySize() u32;
     pub extern fn Clay_CreateArenaWithCapacityAndMemory(capacity: usize, memory: ?*anyopaque) Arena;
     pub extern fn Clay_SetPointerState(position: Vector2, pointerDown: bool) void;
-    pub extern fn Clay_Initialize(arena: Arena, layoutDimensions: Dimensions, errorHandler: ErrorHandler) *Context;
-    pub extern fn Clay_GetCurrentContext() *Context;
-    pub extern fn Clay_SetCurrentContext(context: *Context) void;
+    pub extern fn Clay_Initialize(arena: Arena, layoutDimensions: Dimensions, errorHandler: ErrorHandler) ?*Context;
+    pub extern fn Clay_GetCurrentContext() ?*Context;
+    pub extern fn Clay_SetCurrentContext(context: ?*Context) void;
     pub extern fn Clay_UpdateScrollContainers(enableDragScrolling: bool, scrollDelta: Vector2, deltaTime: f32) void;
     pub extern fn Clay_GetScrollOffset() Vector2;
     pub extern fn Clay_SetLayoutDimensions(dimensions: Dimensions) void;
@@ -835,7 +835,8 @@ pub const minMemorySize = cdefs.Clay_MinMemorySize;
 pub const setPointerState = cdefs.Clay_SetPointerState;
 
 /// Initializes Clay with a memory arena and screen dimensions
-/// Returns a context pointer that can be used with setCurrentContext() for multi-instance support
+/// Returns a context pointer that can be used with setCurrentContext() for multi-instance support,
+/// or null if the arena is too small
 ///
 /// The errorHandler allows you to receive notifications of layout errors
 ///
@@ -863,13 +864,15 @@ pub const initialize = cdefs.Clay_Initialize;
 pub fn initializeAlloc(arena: std.mem.Allocator, layoutDimensions: Dimensions, errorHandler: ErrorHandler) !*Context {
     const min_memory_size: u32 = minMemorySize();
     const memory = try arena.alloc(u8, min_memory_size);
-    return initialize(.init(memory), layoutDimensions, errorHandler);
+    return initialize(.init(memory), layoutDimensions, errorHandler) orelse error.OutOfMemory;
 }
 
 /// Gets current Clay context - useful when working with multiple UI instances
+/// Returns null if Clay has not been initialized yet
 pub const getCurrentContext = cdefs.Clay_GetCurrentContext;
 
 /// Sets current Clay context - required when working with multiple UI instances
+/// Setting null makes `setMaxElementCount` and `setMaxMeasureTextCacheWordCount` change the defaults used by the next `initialize`
 pub const setCurrentContext = cdefs.Clay_SetCurrentContext;
 
 /// Updates internal scroll containers with mouse wheel/touchpad input
